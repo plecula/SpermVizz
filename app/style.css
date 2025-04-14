@@ -31,6 +31,7 @@ header {
   height: 48px;
   cursor: pointer;
   z-index: 1001;
+  color: #5f88dc;
 }
 .menu-overlay {
   position: fixed;
@@ -82,6 +83,7 @@ display: block;
   background-color: #f4f4f4;
   border-radius: 20px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
@@ -105,33 +107,7 @@ display: block;
   flex-direction: column;
   gap: 1.6rem;
   flex: 1 1 30%;
-  align-items: flex-end;
-}
-
-.button {
-  display: inline-block;
-  padding: 1rem 2rem; 
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  text-decoration: none;
-  font-size: 1.4rem; 
-  transition: background 0.3s ease;
-  text-align: center;
-  min-width: 160px; 
-}
-
-.add-video {
-  background: linear-gradient(180deg, #a9c3f5, #5f88dc);
-  color: #000000; /* czarny tekst */
-  font-weight: 100;
-}
-
-.login {
-  background-color: #f1d87c;
-  color: #2c2c2c;
-  font-weight: 100;
-
+  align-items: center;
 }
 
 
@@ -144,19 +120,20 @@ display: block;
   display: inline-block;
   margin: 1rem;
   padding: 1.6rem 3rem;
-  font-weight: bold;
   border: none;
   border-radius: 20px;
   cursor: pointer;
   text-decoration: none;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
 }
 .add-video {
-  background: linear-gradient(180deg, #a9c3f5, #5f88dc);
+  background: linear-gradient(180deg, #a9c3f5, #7291ce);
   color: black;
 }
 .login {
-  background-color: #f1d87c;
+  /* background-color:line  #f1d87c; */
+  background: linear-gradient(180deg,#f1d87c, #b8a45c);
+
   color: #2c2c2c;
 }
 footer {
@@ -164,6 +141,7 @@ footer {
   text-align: left;
   font-size: 1.8rem;
   color: #666;
+  height: 100vh;
 }
 
 .login-container {
