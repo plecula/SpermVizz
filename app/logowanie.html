@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Logowanie - SpermVizz</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header>
+    <div class="logo">
+      <img src="IMG/sperm.png" alt="Logo">
+      <span>Sperm<span class="blue">Vizz</span></span>
+    </div>
+    <img id="menuIcon" class="menu-icon" src="IMG/burger.svg" alt="Menu" onclick="toggleMenu()">
+  </header>
+
+  <div class="menu-overlay" id="menu">
+    <div class="menu-content">
+      <div class="menu-close" onclick="toggleMenu()">&times;</div>
+      <a href="#">MOJE KONTO</a>
+      <a href="index.html">STRONA GŁÓWNA</a>
+      <a href="#">AUTORZY</a>
+      <a href="#">DODAJ WIDEO</a>
+    </div>
+  </div>
+
+  <main class="login-container">
+    <div class="login-box">
+      <label for="login">LOGIN:</label>
+      <input type="text" id="login" name="login">
+
+      <label for="password">HASŁO:</label>
+      <input type="password" id="password" name="password">
+    </div>
+  </main>
+
+  <footer>
+    Stopka
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('menu');
+      const icon = document.getElementById('menuIcon');
+      if (menu.classList.contains('active')) {
+        menu.classList.remove('active');
+        icon.style.display = 'block';
+      } else {
+        menu.classList.add('active');
+        icon.style.display = 'none';
+      }
+    }
+  </script>
+
+</body>
+</html>

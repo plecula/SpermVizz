@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpermVizz</title>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="logo" href="index.html">
+      <img src="IMG/sperm.png" alt="Logo">
+      <span>Sperm<span class="blue">Vizz</span></span>
+    </div>
+    <img id="menuIcon" class="menu-icon" src="IMG/burger.svg" alt="Menu" onclick="toggleMenu()">
+  </header>
+
+  <div class="menu-overlay" id="menu">
+    <div class="menu-content">
+      <div class="menu-close" onclick="toggleMenu()">&times;</div>
+      <a href="#">MOJE KONTO</a>
+      <a href="index.html">STRONA GŁÓWNA</a>
+      <a href="#">AUTORZY</a>
+      <a href="#">DODAJ WIDEO</a>
+    </div>
+  </div>
+
+  <main class="main-box main-flex">
+    <div class="main-text">
+      Interaktywna strona internetowa do wizualizacji problemu segmentacji plemników w sekwencji wideo - segmentacja poprzez części. Wideo ISCI.
+    </div>
+    <div class="main-buttons">
+      <a href="#" class="button add-video">DODAJ WIDEO</a>
+      <a href="logowanie.html" class="button login">ZALOGUJ SIĘ</a>
+    </div>
+  </main>
+  
+
+  <footer>
+    Stopka
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('menu');
+      const icon = document.getElementById('menuIcon');
+      if (menu.classList.contains('active')) {
+        menu.classList.remove('active');
+        icon.style.display = 'block';
+      } else {
+        menu.classList.add('active');
+        icon.style.display = 'none';
+      }
+
+    }
+  </script>
+
+</body>
+</html>
