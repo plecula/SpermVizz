@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dodaj wideo - SpermVizz</title>
-  <link rel="stylesheet" href="style2.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
 </head>
 <body>
 
 <header>
   <div class="logo">
-    <img src="IMG/sperm.png" alt="Logo">
+    <img src="{{ url_for('static', filename='IMG/sperm.png') }}" alt="Logo">
     <span>Sperm<span class="blue">Vizz</span></span>
   </div>
   <svg id="menuIcon" class="menu-icon" onclick="toggleMenu()" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
