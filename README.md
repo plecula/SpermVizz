@@ -10,20 +10,30 @@ The aim of the project is to create an interactive website that allows visualiza
 
 ## Procject Structure
 ```txt
-├── app                      Responsible for the web application
+├── app					Responsible for the web application
 │   ├── main.py
 │   ├── static
+│   │   ├── Fonts
+│   │   │   ├── Italiana-Regular.ttf
+│   │   │   └── OFL.txt
+│   │   ├── IMG
+│   │   │   ├── burger.svg
+│   │   │   ├── favicon.ico
+│   │   │   └── sperm.png
+│   │   ├── style2.css
 │   │   └── style.css
 │   └── templates
-│   	└── index.html
-├── dataset                  Photos and videos needed for segmentation
+│       ├── index.html
+│       ├── logowanie.html
+│       └── wideo.html
+├── dataset				Photos and videos needed for segmentation
 │   ├── private
-│   │   └── -------------
+│   │   └── --------------
 │   └── public
-│   	└── 194_5119_1.png
+│       └── 194_5119_1.png
 ├── README.md
-└── video_processing         Responsible for video processing and segmentation
-	└── segmentation.py
+└── video_processing			Responsible for video processing and segmentation
+    └── segmentation.py
 ```
 ## GUI (prototype)
 
