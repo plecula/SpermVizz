@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dodaj wideo - SpermVizz</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <img src="{{ url_for('static', filename='IMG/sperm.png') }}" alt="Logo">
+    <span>Sperm<span class="blue">Vizz</span></span>
+  </div>
+  <svg id="menuIcon" class="menu-icon" onclick="toggleMenu()" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="3" y1="12" x2="21" y2="12"/>
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+</header>
+
+<div class="menu-overlay" id="menu">
+  <div class="menu-content">
+    <div class="menu-close" onclick="toggleMenu()">&times;</div>
+    <a href="logowanie.html">MOJE KONTO</a>
+    <a href="index.html">STRONA GŁÓWNA</a>
+    <a href="#">AUTORZY</a>
+    <a href="wideo.html">DODAJ WIDEO</a>
+  </div>
+</div>
+
+<main class="upload-section">
+  <form class="upload-box">
+    <label for="video-upload" class="upload-area">
+      <img src="IMG/upload-icon.svg" alt="Upload" class="upload-icon">
+      <input type="file" id="video-upload" accept="video/*" hidden>
+    </label>
+    <button type="submit" class="button login">DODAJ WIDEO</button>
+  </form>
+</main>
+
+<footer>
+  Stopka
+</footer>
+
+<script>
+  function toggleMenu() {
+    const menu = document.getElementById('menu');
+    const icon = document.getElementById('menuIcon');
+    if (menu.classList.contains('active')) {
+      menu.classList.remove('active');
+      icon.style.display = 'block';
+    } else {
+      menu.classList.add('active');
+      icon.style.display = 'none';
+    }
+  }
+</script>
+
+</body>
+</html>

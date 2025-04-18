@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SpermVizz</title>
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <title>Logowanie - SpermVizz</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+
   <header>
-    <div class="logo" href="index.html">
+    <div class="logo">
       <img src="{{ url_for('static', filename='IMG/sperm.png') }}" alt="Logo">
       <span>Sperm<span class="blue">Vizz</span></span>
     </div>
@@ -30,16 +30,15 @@
     </div>
   </div>
 
-  <main class="main-box main-flex">
-    <div class="main-text">
-      Interaktywna strona internetowa do wizualizacji problemu segmentacji plemników w sekwencji wideo - segmentacja poprzez części. Wideo ISCI.
-    </div>
-    <div class="main-buttons">
-      <a href="wideo.html" class="button add-video">DODAJ WIDEO</a>
-      <a href="logowanie.html" class="button login">ZALOGUJ SIĘ</a>
+  <main class="login-container">
+    <div class="login-box">
+      <label for="login">LOGIN:</label>
+      <input type="text" id="login" name="login">
+
+      <label for="password">HASŁO:</label>
+      <input type="password" id="password" name="password">
     </div>
   </main>
-  
 
   <footer>
     Stopka
@@ -56,7 +55,6 @@
         menu.classList.add('active');
         icon.style.display = 'none';
       }
-
     }
   </script>
 
