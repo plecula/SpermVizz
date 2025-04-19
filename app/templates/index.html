@@ -6,6 +6,15 @@
   <title>SpermVizz</title>
   <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flash-messages">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
 </head>
 <body>
   <header>
@@ -23,10 +32,11 @@
   <div class="menu-overlay" id="menu">
     <div class="menu-content">
       <div class="menu-close" onclick="toggleMenu()">&times;</div>
-      <a href="logowanie.html">MOJE KONTO</a>
-      <a href="index.html">STRONA GŁÓWNA</a>
+      <a href="index.html">STRONA GŁÓWNA</a> 
+      <a href="register.html">ZAREJESTRUJ</a>
+      <a href="logowanie.html">ZALOGUJ</a>        
+      <a href="wideo.html">MOJE KONTO</a>
       <a href="#">AUTORZY</a>
-      <a href="wideo.html">DODAJ WIDEO</a>
     </div>
   </div>
 
@@ -42,7 +52,14 @@
   
 
   <footer>
-    Stopka
+    {% if 'username' in session %}
+        <p>Hello {{ session['username'] }}</p>
+        <form action="{{ url_for('logout') }}" method="POST">
+          <button type="submit" href="{{url_for('logout') }}">LOG OUT</button>
+        </form>    
+    {% else %}
+        <p>YOU'RE NOT LOGGED IN</p>
+    {% endif %}
   </footer>
 
   <script>

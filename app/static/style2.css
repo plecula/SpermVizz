@@ -162,4 +162,11 @@ body {
     color: #666;
   }
   
-  
+  /* FLASH MESSAGES */
+
+.flash-messages {
+  color: rgb(49, 18, 39);
+  font-weight: bold;
+  list-style: none;
+  padding: 10px;
+}
