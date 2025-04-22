@@ -111,7 +111,7 @@ def logout():
     logout_user()
     flash('LOGGED OUT')
     session.pop('username', None)
-    return redirect(url_for('login'))
+    return redirect(url_for('home'))
 
 
 if __name__ == '__main__':

@@ -27,15 +27,27 @@
       <line x1="3" y1="6" x2="21" y2="6"/>
       <line x1="3" y1="18" x2="21" y2="18"/>
     </svg>
-      </header>
+  </header>
 
   <div class="menu-overlay" id="menu">
     <div class="menu-content">
       <div class="menu-close" onclick="toggleMenu()">&times;</div>
-      <a href="index.html">STRONA GŁÓWNA</a> 
-      <a href="register.html">ZAREJESTRUJ</a>
-      <a href="logowanie.html">ZALOGUJ</a>        
-      <a href="wideo.html">MOJE KONTO</a>
+      <a href="index.html">STRONA GŁÓWNA</a>
+     
+      {% if 'username' in session %}  
+        <a>     
+          <form id="logout-button-form" action="{{ url_for('logout') }}" method="POST">
+            <button id="logout-button" type="submit" href="{{url_for('logout') }}">
+              WYLOGUJ
+            </button>         
+          </form>  
+        </a>   
+        <a href="wideo.html">MOJE KONTO</a>
+      {% else %}
+        <a href="register.html">ZAREJESTRUJ</a>
+        <a href="logowanie.html">ZALOGUJ</a>
+      {% endif %}        
+      
       <a href="#">AUTORZY</a>
     </div>
   </div>
