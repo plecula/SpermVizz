@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Logowanie - SpermVizz</title>
+  <title>Register - SpermVizz</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+ 
+  <!-- FLASH MESSAGES -->
   {% with messages = get_flashed_messages() %}
   {% if messages %}
     <ul class="flash-messages">
@@ -14,6 +16,7 @@
     </ul>
   {% endif %}
 {% endwith %}
+
 </head>
 <body>
 
@@ -52,17 +55,19 @@
         </div>
       </div>
 
-  <main class="login-container">
-    <div class="login-box">
+  <main class="register-container">
+    <div class="register-box">
       <form class="register-form" method="POST">
         <label for="username">LOGIN:</label>
         <input type="text" id="username" name="username" required>
   
         <label for="password">HASŁO:</label>
         <input type="password" id="password" name="password" required>
-
-        <button type="submit">ZALOGUJ</button>
-      </form>     
+  
+        <!-- <label for="password">POWTÓRZ HASŁO:</label>
+        <input type="password" id="password" name="password" required> -->
+        <button type="submit">ZAREJESTRUJ</button>
+      </form>  
     </div>
   </main>
 
