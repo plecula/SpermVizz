@@ -15,7 +15,8 @@ ament-pep257==0.12.11
 ament-uncrustify==0.12.11
 ament-xmllint==0.12.11
 angles==1.15.0
-bcrypt @ file:///home/conda/feedstock_root/build_artifacts/bcrypt_1740762460923/work
+#bcrypt @ file:///home/conda/feedstock_root/build_artifacts/bcrypt_1740762460923/work
+bcrypt==4.1.2
 blinker @ file:///home/conda/feedstock_root/build_artifacts/blinker_1731096409132/work
 builtin-interfaces==1.2.1
 click @ file:///home/conda/feedstock_root/build_artifacts/click_1734858813237/work
