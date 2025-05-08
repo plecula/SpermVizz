@@ -15,7 +15,7 @@ app.secret_key = os.getenv("SECRET_KEY")
 
 # MYSQL DATABASE CONFIG
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/SpermVizz'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL") #'mysql+pymysql://root:@localhost/SpermVizz'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -118,4 +118,4 @@ if __name__ == '__main__':
     app.run(debug=True)
 
 # with app.app_context():
-#     db.create_all()  # tworzy tabele w bazie
+#      db.create_all()  # tworzy tabele w bazie
