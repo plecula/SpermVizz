@@ -15,8 +15,9 @@ app.secret_key = os.getenv("SECRET_KEY")
 
 # MYSQL DATABASE CONFIG
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL") #'mysql+pymysql://root:@localhost/SpermVizz'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/SpermVizz' # os.getenv("DATABASE_URL")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -87,22 +88,30 @@ def login():
     return render_template('logowanie.html')
 
 # UPLOAD
-@app.route('/wideo.html')   #, methods=['POST']
+@app.route('/wideo.html', methods=['GET', 'POST'])
 @login_required
 def video():
-    # file = request.files['video']
-    # if file.filename == '':
-    #     return "No such file", 400
-    # filename = secure_filename(file.filename)
-    # save_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    # file.save(save_path)
+    if request.method == 'POST':
+        file = request.files['file']
+        if file.filename == '':
+            flash('No file selected!')
+            return redirect(request.url)
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        flash('Upload successful!')
+        return redirect(url_for('video'))
+
+    # FILES LIST IN UPLOAD_FOLDER
+    upload_folder = app.config['UPLOAD_FOLDER']
+    files = os.listdir(upload_folder)
+    files = [f for f in files if os.path.isfile(os.path.join(upload_folder, f))]
 
     # # FILE INFO COMMITED TO DATABASE
     # new_video = Video(filename=filename, user_id=session['user_id'])
     # db.session.add(new_video)
     # db.session.commit()
 
-    return render_template('wideo.html')
+    return render_template('wideo.html', files =files)
 
 # LOGOUT
 @app.route('/logout', methods=['POST'])
