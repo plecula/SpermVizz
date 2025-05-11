@@ -1,6 +1,6 @@
 # Full U-Net model
 
-from .unet_parts import *
+from unet_parts import *
 
 class UNet(nn.Module):
     def __init__(self, n_channels, n_classes):
@@ -28,4 +28,5 @@ class UNet(nn.Module):
         x = self.up4(x, x1)
         x = self.outconv(x)
         
-        return torch.sigmoid(x)
+        #return torch.sigmoid(x)    # We use BCEWithLogitsLoss() in train.py which is more stable in values
+        return x
