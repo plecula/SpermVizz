@@ -84,6 +84,9 @@ Testing models
 - make sure to change file path
 - run `python3 segmentation.py` or `python3 seg-unet.py`
 
+##### SAM Models from:
+https://github.com/shiy19/SpeHeaTal?tab=readme-ov-file
+
 ## Authors
 - Urszula Plec
 - Weronika Woźniak
