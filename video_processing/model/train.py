@@ -22,8 +22,10 @@ def train():
     LEARNING_RATE = 3e-4
     BATCH_SIZE = 4
     EPOCHS = 20
+
     DATA_PATH = "/home/weronika/just_coding/SpermVizz/dataset/private"
     MODEL_SAVE_PATH = "/home/weronika/just_coding/SpermVizz/video_processing/model"
+
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     train_dataset = SpermDataset(DATA_PATH)

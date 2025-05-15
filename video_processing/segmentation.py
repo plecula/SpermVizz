@@ -9,8 +9,8 @@ import math
 BASE_DIR = Path(__file__).resolve().parent.parent
 image_path = BASE_DIR / "app" / "static" / "uploads" / "11.png"
 
-sam_checkpoint = "sam_vit_b_01ec64.pth"     # sam_vit_h_4b8939.pth  # sam_vit_b_01ec64.pth
-model_type = "vit_b"                        # vit_h  # vit_b
+sam_checkpoint = "sam_vit_h_4b8939.pth"     # sam_vit_h_4b8939.pth  # sam_vit_b_01ec64.pth
+model_type = "vit_h"                        # vit_h  # vit_b
 
 sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
 sam.to("cpu")  # or "cuda"
@@ -29,8 +29,8 @@ masks_sorted = sorted(masks, key=lambda x: x['predicted_iou'], reverse=True)
 best_mask = masks_sorted[0]['segmentation']
 
 plt.figure(figsize=(6,6))
-plt.imshow(best_mask, cmap='gray')  # True - white
-plt.title('Maska segmentacji')
+plt.imshow(1-best_mask, cmap='gray')  # True - white
+plt.title('Mask')
 plt.axis('off')
 plt.show()
 
