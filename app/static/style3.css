@@ -1,4 +1,3 @@
-/* Reset / baza */
 body {
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
@@ -91,88 +90,92 @@ body {
     cursor: pointer;
   }
   
-  
-  .upload-section {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 70vh;
-    background-color: #f5f5f5;
-  }
-  
-  .upload-box {
-    background-color: #f1f1f1;
-    padding: 3rem;
-    border-radius: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  }
-  
-  .upload-area, #preview-video, #preview-image {
-    width: 450px;
-    height: 260px;
-    background: linear-gradient(to bottom, #fdf2d8, #e2dbcc);
-    border-radius: 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: inset 0 0 6px rgba(0,0,0,0.06);
-    transition: box-shadow 0.3s ease;
-  }
 
-  .upload-area:hover {
-    box-shadow: inset 0 0 12px rgba(0,0,0,0.1);
-  }
-  
-  .upload-icon {
-    width: 48px;
-    height: 48px;
-    opacity: 0.4;
-  }
-  
-  .button {
-    padding: 1.2rem 2.4rem;
-    border: none;
-    border-radius: 12px;
-    font-size: 1.4rem;
-    cursor: pointer;
-    text-decoration: none;
-    font-weight: 400;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-    transition: background 0.3s ease;
-  }
-  
-  .login {
-    background-color: #ead282;
-    color: black;
-  }
-  
-  .login:hover {
-    background-color: #dec76c;
-  }
-  
-  footer {
-    padding: 4rem;
-    text-align: left;
-    font-size: 1.6rem;
-    color: #666;
-  }
-  
-  /* FLASH MESSAGES */
+    .container {
+      display: flex;
+      height: calc(100vh - 62px); /* wysokość bez header */
+      padding: 20px;
+      box-sizing: border-box;
+    }
 
-.flash-messages {
-  color: rgb(49, 18, 39);
-  font-weight: bold;
-  list-style: none;
-  padding: 10px;
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background: #f0f0f0;
+      border-radius: 15px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      font-size: 14px;
+    }
+    .sidebar section {
+      background: #ddd;
+      border-radius: 15px;
+      padding: 10px;
+    }
+    .sidebar h2 {
+      font-size: 18px;
+      margin: 0 0 10px 0;
+      text-decoration: underline;
+    }
+    .tools-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      color: #444;
+    }
+    .tools-list li {
+      margin: 8px 0;
+      cursor: default;
+    }
+    .tools-list li.eroded {color: green;}
+    .tools-list li.missing {color: goldenrod;}
+    .tools-list li.short {color: navy;}
+    .tools-list li.broken {color: brown;}
+    .tools-list li.artifact {color: purple;}
+
+    /* Main content */
+    .main-content {
+      display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 1rem auto;
+  width: 90%;
+    }
+
+
+    .video-tile {
+        margin: 20px; 
+  background-color: #ccc;
+  height: 350px;
+  border-radius: 12px;
+    width: 800px;
+    display: flex;
+  flex-wrap: wrap;
+  gap: 30px; 
 }
 
-#logout-button {
-all: unset; /* wyczyść wszystkie style przeglądarki */
+    .video-caption {
+  background-color: #eee;
+  height: 20px;
+  border-radius: 8px;
+  margin-top: 18rem;
+  padding: 8px;
+  font-weight: bold;
+    width: 100%;
+}
+.video-list {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+    width: 100%;
+}
+
+
+
+    #logout-button {
+    all: unset; /* wyczyść wszystkie style przeglądarki */
   display: block;
   width: 100%;
   text-align: center;

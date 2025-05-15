@@ -98,7 +98,7 @@ def video():
             return redirect(request.url)
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        flash('Upload successful!')
+        #flash('Upload successful!')
         return render_template('segmentacja.html')
     # FILES LIST IN UPLOAD_FOLDER
     upload_folder = app.config['UPLOAD_FOLDER']
