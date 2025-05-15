@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SpermVizz</title>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flash-messages">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #fff;
+      color: #333;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      padding: 10px 20px;
+      border-bottom: 1px solid #ddd;
+      background: white;
+    }
+    header img {
+      height: 40px;
+      margin-right: 10px;
+    }
+    header span {
+      font-size: 24px;
+      font-weight: 600;
+      color: #2d7fff;
+    }
+
+    .container {
+      display: flex;
+      height: calc(100vh - 62px); /* wysokość bez header */
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background: #f0f0f0;
+      border-radius: 15px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      font-size: 14px;
+    }
+    .sidebar section {
+      background: #ddd;
+      border-radius: 15px;
+      padding: 10px;
+    }
+    .sidebar h2 {
+      font-size: 18px;
+      margin: 0 0 10px 0;
+      text-decoration: underline;
+    }
+    .tools-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      color: #444;
+    }
+    .tools-list li {
+      margin: 8px 0;
+      cursor: default;
+    }
+    .tools-list li.eroded {color: green;}
+    .tools-list li.missing {color: goldenrod;}
+    .tools-list li.short {color: navy;}
+    .tools-list li.broken {color: brown;}
+    .tools-list li.artifact {color: purple;}
+
+    /* Main content */
+    .main-content {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-gap: 20px;
+      padding-left: 20px;
+    }
+    .video-tile {
+      background: #ccc;
+      border-radius: 15px;
+      height: 180px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      color: #666;
+    }
+    .video-caption {
+      margin-top: 8px;
+      font-weight: 600;
+      color: #555;
+      text-align: center;
+    }
+
+  </style>
+</head>
+<body>
+ <header>
+    <div class="logo" href="index.html">
+      <img src="{{ url_for('static', filename='IMG/sperm.png') }}" alt="Logo">
+      <span>Sperm<span class="blue">Vizz</span></span>
+    </div>
+    <svg id="menuIcon" class="menu-icon" onclick="toggleMenu()" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </header>
+
+
+<div class="menu-overlay" id="menu">
+    <div class="menu-content">
+      <div class="menu-close" onclick="toggleMenu()">&times;</div>
+      <a href="index.html">STRONA GŁÓWNA</a>
+     
+      {% if 'username' in session %}  
+        <a>     
+          <form id="logout-button-form" action="{{ url_for('logout') }}" method="POST">
+            <button id="logout-button" type="submit" href="{{url_for('logout') }}">
+              WYLOGUJ
+            </button>         
+          </form>  
+        </a>   
+        <a href="wideo.html">MOJE KONTO</a>
+      {% else %}
+        <a href="register.html">ZAREJESTRUJ</a>
+        <a href="logowanie.html">ZALOGUJ</a>
+      {% endif %}        
+      
+      <a href="#">AUTORZY</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="sidebar">
+      <section>
+        <div><strong>Model:</strong></div>
+        <div>- model1</div>
+        <div>- model2</div>
+      </section>
+
+      <section>
+        <h2>Tools</h2>
+        <ul class="tools-list">
+          <li class="eroded">eroded head</li>
+          <li class="missing">missing sperm cell</li>
+          <li class="short">short tail</li>
+          <li class="broken">broken tail</li>
+          <li class="artifact">artifact</li>
+        </ul>
+      </section>
+
+      <section>
+        <div><strong>My files:</strong></div>
+        <div>-</div>
+        <div>-</div>
+        <div>-</div>
+      </section>
+    </div>
+
+    <div class="main-content">
+      <div class="video-tile">Wideo 1
+        <div class="video-caption">Opis 1</div>
+      </div>
+      <div class="video-tile">Wideo 2
+        <div class="video-caption">Opis 2</div>
+      </div>
+      <div class="video-tile">Wideo 3
+        <div class="video-caption">Opis 3</div>
+      </div>
+      <div class="video-tile">Wideo 4
+        <div class="video-caption">Opis 4</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+      const menu = document.getElementById('menu');
+      const icon = document.getElementById('menuIcon');
+      if (menu.classList.contains('active')) {
+        menu.classList.remove('active');
+        icon.style.display = 'block';
+      } else {
+        menu.classList.add('active');
+        icon.style.display = 'none';
+      }
+
+    }
+  </script>
+</body>
+</html>

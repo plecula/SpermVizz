@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dodaj wideo - SpermVizz</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style2.css') }}">
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <ul class="flash-messages">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+{% endwith %}
 </head>
 <body>
 
@@ -23,25 +32,57 @@
 <div class="menu-overlay" id="menu">
   <div class="menu-content">
     <div class="menu-close" onclick="toggleMenu()">&times;</div>
-    <a href="logowanie.html">MOJE KONTO</a>
     <a href="index.html">STRONA GŁÓWNA</a>
+   
+    {% if 'username' in session %}  
+      <a>     
+        <form id="logout-button-form" action="{{ url_for('logout') }}" method="POST">
+          <button id="logout-button" type="submit" href="{{url_for('logout') }}">
+            WYLOGUJ
+          </button>         
+        </form>  
+      </a>   
+      <a href="wideo.html">MOJE KONTO</a>
+    {% else %}
+      <a href="register.html">ZAREJESTRUJ</a>
+      <a href="logowanie.html">ZALOGUJ</a>
+    {% endif %}        
+    
     <a href="#">AUTORZY</a>
-    <a href="wideo.html">DODAJ WIDEO</a>
   </div>
 </div>
 
 <main class="upload-section">
-  <form class="upload-box">
+  <form class="upload-box" action="{{ url_for('video') }}" method="POST" enctype="multipart/form-data">
     <label for="video-upload" class="upload-area">
       <img src="IMG/upload-icon.svg" alt="Upload" class="upload-icon">
-      <input type="file" id="video-upload" accept="video/*" hidden>
+      <input type="file" name="file" id="video-upload" accept="video/*, image/*" hidden>
+      <video id="preview-video" autoplay muted controls style="display: none"></video>
+      <img id="preview-image" style="display: none"/>
     </label>
     <button type="submit" class="button login">DODAJ WIDEO</button>
+
   </form>
 </main>
 
+<div class="my-files">
+  <label>My files</label>
+  <ul class="myy-files">
+    {% for file in files %}
+      <li><a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank">{{ file }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
+
 <footer>
-  Stopka
+  {% if 'username' in session %}
+        <p>Hello {{ session['username'] }}</p>
+        <form action="{{ url_for('logout') }}" method="POST">
+          <button type="submit" href="{{url_for('logout') }}">LOG OUT</button>
+        </form>    
+    {% else %}
+        <p>YOU'RE NOT LOGGED IN</p>
+    {% endif %}
 </footer>
 
 <script>
@@ -57,6 +98,34 @@
     }
   }
 </script>
+
+<!-- LOAD FILE PREVIEW -->
+ 
+<script>
+  document.getElementById('video-upload').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    const video = document.getElementById('preview-video');
+    const image = document.getElementById('preview-image');
+
+    if (file) {
+    const fileURL = URL.createObjectURL(file);
+
+    if (file.type.startsWith('video/')) {
+      video.src = fileURL;
+      video.style.display = 'block';
+      image.style.display = 'none';
+    } else if (file.type.startsWith('image/')) {
+      image.src = fileURL;
+      image.style.display = 'block';
+      video.style.display = 'none';
+    } else {
+      video.style.display = 'none';
+      image.style.display = 'none';
+      alert('Wrong data');
+    }
+  }
+  });
+  </script>
 
 </body>
 </html>
