@@ -22,7 +22,14 @@ class SpermDataset(Dataset):
         # self._prepare_sequences()
         # self._prepare_transform()
         # self._prepare_final_images_with_flow()
+# <<<<<<< weronika
     
+# =======
+#         print("Found frames:", len(self.path_images))
+#         print("Found head masks:", len(self.path_head_masks))
+#         print("Found flagellum masks:", len(self.path_flagellum_masks))
+
+# >>>>>>> do-testu
 
     def __len__(self):
         
