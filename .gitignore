@@ -1,3 +1,4 @@
 /dataset/private
 .env
 __pycache__/
+/app/static/uploads
