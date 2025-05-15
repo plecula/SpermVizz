@@ -3,7 +3,7 @@ body {
     font-family: Arial, Helvetica, sans-serif;
     background-color: #ffffff;
   }
-  
+
   /* Nagłówek */
   header {
   font-family: 'Italiana'; src: url("D:\studia\studia sem. VI\RAIM\SpermVizz\app\static\Fonts");
@@ -15,25 +15,25 @@ body {
     position: relative;
     z-index: 99;
   }
-  
+
   .logo {
     display: flex;
     align-items: center;
   }
-  
+
   .logo img {
     height: 80px;
     margin-right: 20px;
   }
-  
+
   .logo span {
     font-size: 3rem;
   }
-  
+
   .logo .blue {
     color: #5f88dc;
   }
-  
+
   /* Ikona menu (burger) */
   .menu-icon {
     height: 48px;
@@ -41,7 +41,7 @@ body {
     z-index: 1001;
     color: #5f88dc;
   }
-  
+
   /* Menu po prawej */
   .menu-overlay {
     position: fixed;
@@ -56,11 +56,11 @@ body {
     transition: right 0.3s ease-in-out;
     z-index: 999;
   }
-  
+
   .menu-overlay.active {
     right: 0;
   }
-  
+
   .menu-content {
     background-color: #8cabf4;
     width: 600px;
@@ -69,7 +69,7 @@ body {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .menu-content a {
     color: white;
     text-decoration: none;
@@ -80,7 +80,7 @@ body {
     width: 100%;
     text-align: center;
   }
-  
+
   .menu-close {
     position: absolute;
     top: 2rem;
@@ -89,7 +89,7 @@ body {
     color: white;
     cursor: pointer;
   }
-  
+
 
     .container {
       display: flex;
@@ -100,7 +100,7 @@ body {
 
     /* Sidebar */
     .sidebar {
-      width: 220px;
+      width: 120px;
       background: #f0f0f0;
       border-radius: 15px;
       padding: 15px;
@@ -136,42 +136,52 @@ body {
     .tools-list li.artifact {color: purple;}
 
     /* Main content */
-    .main-content {
-      display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 1rem auto;
-  width: 90%;
-    }
-
+.main-content {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 20px 40px; /* 20px pionowo, 40px poziomo */
+  padding-left: 20px;
+}
 
     .video-tile {
-        margin: 20px; 
-  background-color: #ccc;
-  height: 350px;
-  border-radius: 12px;
-    width: 800px;
-    display: flex;
-  flex-wrap: wrap;
-  gap: 30px; 
+  background: #ccc;
+  border-radius: 15px;
+  padding: 0; /* usuń padding, bo pasek ma mieć pełną szerokość */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  width: 450px; /* wypełnia grid */
+  box-sizing: border-box;
+  overflow: hidden;
+  height: 350px; /* na wypadek zaokrągleń */
 }
 
-    .video-caption {
-  background-color: #eee;
-  height: 20px;
-  border-radius: 8px;
-  margin-top: 18rem;
-  padding: 8px;
-  font-weight: bold;
-    width: 100%;
-}
-.video-list {
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
-    width: 100%;
+/* główna zawartość kafelka (video) */
+.video-content {
+  padding: 15px;
+  text-align: center;
+  flex-grow: 1;
 }
 
+/* podłużny pasek pod kafelkiem */
+.video-caption {
+  width: 100%;
+  background-color: #999; /* np. ciemniejszy szary */
+  color: white;
+  font-weight: 600;
+  text-align: center;
+  padding: 10px 0;
+
+}
+.video-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 450px; /* dopasowane do szerokości kafelka */
+  margin-bottom: 20px; /* odstęp między kolejnymi "wrapperami" */
+}
 
 
     #logout-button {

@@ -74,26 +74,36 @@
       </section>
 
       <section>
-        <div><strong>My files:</strong></div>
-        <div>-</div>
-        <div>-</div>
-        <div>-</div>
+        <div class="my-files">
+  <label>My files</label>
+  <ul class="myy-files">
+    {% for file in files %}
+      <li><a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank">{{ file }}</a></li>
+    {% endfor %}
+  </ul>
+</div>
       </section>
     </div>
-  <div classs=""video-list>
+
+
+  <div class="video-list">
     <div class="main-content">
-      <div class="video-tile">Wideo 1
+       <div class="video-wrapper">
+      <div class="video-tile">Wideo 1</div>
         <div class="video-caption">Opis 1</div>
-      </div>
-      <div class="video-tile">Wideo 2
+    </div>
+    <div class="video-wrapper">
+      <div class="video-tile">Wideo 2  </div>
         <div class="video-caption">Opis 2</div>
-      </div>
-      <div class="video-tile">Wideo 3
+    </div>
+    <div class="video-wrapper">
+      <div class="video-tile">Wideo 3</div>
         <div class="video-caption">Opis 3</div>
       </div>
-      <div class="video-tile">Wideo 4
+      <div class="video-wrapper">
+      <div class="video-tile">Wideo 4 </div>
         <div class="video-caption">Opis 4</div>
-      </div>
+     </div>
     </div>
   </div>
 </div>
