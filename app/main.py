@@ -15,7 +15,7 @@ app.secret_key = os.getenv("SECRET_KEY")
 
 # MYSQL DATABASE CONFIG
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'os.getenv("DATABASE_URL")' # os.getenv("DATABASE_URL")  #mysql+pymysql://root:@localhost/SpermVizz
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/SpermVizz' # os.getenv("DATABASE_URL")  #'mysql+pymysql://root:@localhost/SpermVizz'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 
@@ -115,6 +115,14 @@ def video():
     # db.session.commit()
 
     return render_template('wideo.html', files =files)
+
+# MY ACCOUNT - SEGMENTATION INTERFACE
+@app.route('/segmentacja.html', methods=['GET', 'POST'])
+@login_required
+def interface():
+
+
+    return render_template('segmentacja.html')
 
 # LOGOUT
 @app.route('/logout', methods=['POST'])
