@@ -44,7 +44,7 @@
             </button>         
           </form>  
         </a>   
-        <a href="wideo.html">MOJE KONTO</a>
+        <a href="wideo.html">DODAJ WIDEO</a>
       {% else %}
         <a href="register.html">ZAREJESTRUJ</a>
         <a href="logowanie.html">ZALOGUJ</a>
@@ -57,9 +57,19 @@
   <div class="container">
     <div class="sidebar">
       <section>
-        <div><strong>Model:</strong></div>
+        <!-- <div><strong>Model:</strong></div>
         <div>- model1</div>
-        <div>- model2</div>
+        <div>- model2</div> -->
+<!-- mojje proby xd -->
+        <div class="my-models">
+          <label>My models</label>
+          <ul class="myy-models">
+            {% for model in models %}
+              <li><a href="{{ url_for('video_processing', modelname='models/' ~ model) }}" target="_blank">{{ model }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+
       </section>
 
       <section>
@@ -75,13 +85,13 @@
 
       <section>
         <div class="my-files">
-  <label>My files</label>
-  <ul class="myy-files">
-    {% for file in files %}
-      <li><a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank">{{ file }}</a></li>
-    {% endfor %}
-  </ul>
-</div>
+          <label>My files</label>
+          <ul class="myy-files">
+            {% for file in files %}
+              <li><a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank">{{ file }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
       </section>
     </div>
 
