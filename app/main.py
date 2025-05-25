@@ -15,6 +15,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 
 # MYSQL DATABASE CONFIG
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/SpermVizz' # os.getenv("DATABASE_URL")  #'mysql+pymysql://root:@localhost/SpermVizz'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
