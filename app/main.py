@@ -87,6 +87,12 @@ def login():
 @app.route('/wideo.html', methods=['GET', 'POST'])
 @login_required
 def video():
+
+     # FILES LIST IN UPLOAD_FOLDER
+    upload_folder = app.config['UPLOAD_FOLDER']
+    files = os.listdir(upload_folder)
+    files = [f for f in files if os.path.isfile(os.path.join(upload_folder, f))]
+
     if request.method == 'POST':
         file = request.files['file']
         if file.filename == '':
@@ -98,12 +104,7 @@ def video():
         flash('Upload successful!')
         #return redirect(url_for('video'))
 
-        return render_template('segmentacja.html')
-
-    # FILES LIST IN UPLOAD_FOLDER
-    upload_folder = app.config['UPLOAD_FOLDER']
-    files = os.listdir(upload_folder)
-    files = [f for f in files if os.path.isfile(os.path.join(upload_folder, f))]
+        return render_template('wideo.html', files =files)
 
     return render_template('wideo.html', files =files)
 
@@ -123,6 +124,39 @@ def interface():
     files = [f for f in files if os.path.isfile(os.path.join(upload_folder, f))]
 
     return render_template('segmentacja.html',models=models, files=files)
+
+# MY ACCOUNT - COMPARE MODELS
+@app.route('/compare.html', methods=['GET', 'POST'])
+@login_required
+def compareUI():
+    # SEGMENTATION MODEL LIST IN MODEL FOLDER
+    model_folder = app.config['MODEL_FOLDER']
+    models = os.listdir(model_folder)
+    models = [m for m in models if os.path.isfile(os.path.join(model_folder, m))]
+
+    # FILE LIST IN UPLOAD FOLDER
+    upload_folder = app.config['UPLOAD_FOLDER']
+    files = os.listdir(upload_folder)
+    files = [f for f in files if os.path.isfile(os.path.join(upload_folder, f))]
+
+    return render_template('compare.html',models=models, files=files)
+
+# MY ACCOUNT - SPERM CELL TRACK
+@app.route('/tracking.html', methods=['GET', 'POST'])
+@login_required
+def trackUI():
+    # SEGMENTATION MODEL LIST IN MODEL FOLDER
+    model_folder = app.config['MODEL_FOLDER']
+    models = os.listdir(model_folder)
+    models = [m for m in models if os.path.isfile(os.path.join(model_folder, m))]
+
+    # FILE LIST IN UPLOAD FOLDER
+    upload_folder = app.config['UPLOAD_FOLDER']
+    files = os.listdir(upload_folder)
+    files = [f for f in files if os.path.isfile(os.path.join(upload_folder, f))]
+
+    return render_template('tracking.html',models=models, files=files)
+
 
 # SEGMENTATION MODELS
 @app.route('/video_processing/<path:modelname>')

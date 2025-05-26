@@ -22,7 +22,7 @@
     <div class="logo" href="index.html">
       <img src="{{ url_for('static', filename='IMG/sperm.png') }}" alt="Logo">
       <span>Sperm<span class="blue">Vizz</span></span>
-        <p class="view-text">Check quality</p> 
+      <p class="view-text">Sperm cell track</p> 
     </div>
     <svg id="menuIcon" class="menu-icon" onclick="toggleMenu()" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="3" y1="12" x2="21" y2="12"/>
@@ -88,29 +88,28 @@
     </div>
 
     
+
+
   <div class="video-list">
     <div class="main-content">
-      <div class="video-wrapper">
-        <div class="video-tile">Wideo 1</div>
+       <div class="video-wrapper">
+      <div class="video-tile">1 klatka</div>
         <div class="video-caption">Opis 1</div>
-      </div>
-      <div class="video-wrapper">
-        <div class="video-tile">Wideo 2  </div>
+    </div>
+    <div class="video-wrapper">
+      <div class="video-tile">2 klatka  </div>
         <div class="video-caption">Opis 2</div>
-      </div>
-      <div class="video-wrapper">
-        <div class="video-tile">Wideo 3</div>
+    </div>
+    <div class="video-wrapper">
+      <div class="video-tile">3 klatka</div>
         <div class="video-caption">Opis 3</div>
       </div>
       <div class="video-wrapper">
-        <div class="video-tile">
-          <canvas id="canvas" width="450" height="350"></canvas>
-        </div>
+      <div class="video-tile">4 klatka </div>
         <div class="video-caption">Opis 4</div>
-      </div>
+     </div>
     </div>
   </div>
-
   <div class="sidebars-wrapper">
     <div class="sidebar-right">
       <section>
@@ -139,11 +138,11 @@
       <section>
         <label>TOOLS</label>
         <ul class="tools-list">
-          <button onclick="selectTool('eroded-head')"><li class="eroded">eroded head</li></button>
-          <button onclick="selectTool('missing-cell')"><li class="missing">missing sperm cell</li></button>
-          <button onclick="selectTool('short-tail')"><li class="short">short tail</li></button>
-          <button onclick="selectTool('broken-tail')"><li class="broken">broken tail</li></button>
-          <button onclick="selectTool('artifact')"><li class="artifact">artifact</li></button>
+          <li class="eroded">eroded head</li>
+          <li class="missing">missing sperm cell</li>
+          <li class="short">short tail</li>
+          <li class="broken">broken tail</li>
+          <li class="artifact">artifact</li>
         </ul>
       </section>
     </div>
@@ -155,7 +154,6 @@
 <label>charts and analysis here!</label>
 
 </div>
-  <script src="{{ url_for('static', filename='js/tools.js') }}"></script>
 
   <script>
     function toggleMenu() {
