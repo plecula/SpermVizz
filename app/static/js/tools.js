@@ -27,8 +27,8 @@ canvas.addEventListener("mousemove", (e) => {
     const rect = canvas.getBoundingClientRect();
     currentX = e.clientX - rect.left;
     currentY = e.clientY - rect.top;
-    
-     // Wyczyszczenie canvasu i odrysowanie wszystkich poprzednich oznaczeń
+
+     // clear canvas, redrawing submited annotations
     context.clearRect(0, 0, canvas.width, canvas.height);
     redrawAnnotations();
 
@@ -37,7 +37,7 @@ canvas.addEventListener("mousemove", (e) => {
     const centerX = (startX + currentX) / 2;
     const centerY = (startY + currentY) / 2;
 
-    // Rysowanie na podglądzie
+    // display while drawing
     if (isDrawing) {
         drawLive(centerX, centerY, width / 2, height / 2);
     }
@@ -58,7 +58,7 @@ canvas.addEventListener("mouseup", (e) => {
   const centerX = (startX + endX) / 2;
   const centerY = (startY + endY) / 2;
 
-  // Zapisanie do tablicy anotacji
+  // write to annotations array
   annotations.push({
     type: currentTool,
     x: centerX,
@@ -72,37 +72,11 @@ canvas.addEventListener("mouseup", (e) => {
 
   });
 
-  // Wyczyszczenie canvasu i odrysowanie wszystkich anotacji
+  // clear canvas, redrawing submited annotations
   context.clearRect(0, 0, canvas.width, canvas.height);
   redrawAnnotations();
   currentTool = null;
 });
-
-function drawArrow(fromX, fromY, toX, toY, color = "black") {
-    const headlen = 10; // długość grotka
-    const dx = toX - fromX;
-    const dy = toY - fromY;
-    const angle = Math.atan2(dy, dx);
-
-    // kreska
-    context.beginPath();
-    context.moveTo(fromX, fromY);
-    context.lineTo(toX, toY);
-    context.strokeStyle = color;
-    context.lineWidth = 2;
-    context.stroke();
-
-    // grot
-    context.beginPath();
-    context.moveTo(toX, toY);
-    context.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6),
-                   toY - headlen * Math.sin(angle - Math.PI / 6));
-    context.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6),
-                   toY - headlen * Math.sin(angle + Math.PI / 6));
-    context.lineTo(toX, toY);
-    context.fillStyle = color;
-    context.fill();
-}
 
 function redrawAnnotations() {
     annotations.forEach((ann) => {
@@ -116,22 +90,8 @@ function redrawAnnotations() {
                 context.stroke();
                 context.closePath();
                 break;
-
             case 'eroded-head':
-                // context.beginPath();
-                // context.moveTo(ann.x, ann.y);
-                // context.lineTo(ann.x + 20, ann.y - 10);
-                // context.moveTo(ann.x, ann.y);
-                // context.lineTo(ann.x + 20, ann.y + 10);
-                // context.moveTo(ann.x, ann.y);
-                // context.lineTo(ann.x + 40, ann.y);
-                // context.strokeStyle = "green";
-                // context.lineWidth = 2;
                 drawArrow(ann.startX, ann.startY, ann.x, ann.y, "green");
-                // context.stroke();
-                // context.closePath();
-
-                
                 break;
             case 'missing-cell':
                 context.beginPath();
@@ -177,22 +137,11 @@ function redrawAnnotations() {
             context.stroke();
             context.closePath();
             break;
-        case 'eroded-head':
-            // context.beginPath();
-            // context.moveTo(x, y);
-            // // context.lineTo(x + 20, y - 10);
-            // // context.moveTo(x, y);
-            // // context.lineTo(x + 20, y + 10);
-            // // context.moveTo(x, y);
-            // // context.lineTo(x + 40, y);
-            
-            // context.strokeStyle = "green";
-            // context.lineWidth = 2;
-            // context.stroke();
-            // context.closePath();
-            drawArrow(startX, startY, x, y, "green");
 
+        case 'eroded-head':
+            drawArrow(startX, startY, x, y, "green");
             break;
+
         case 'missing-cell':
             context.beginPath();
             context.rect(x, y, width, height)
@@ -220,5 +169,29 @@ function redrawAnnotations() {
     }
 
   }
+ 
+  function drawArrow(fromX, fromY, toX, toY, color = "black") {
+    const headlen = 10; // arrowhead length
+    const dx = toX - fromX;
+    const dy = toY - fromY;
+    const angle = Math.atan2(dy, dx);
 
-  
+    // line
+    context.beginPath();
+    context.moveTo(fromX, fromY);
+    context.lineTo(toX, toY);
+    context.strokeStyle = color;
+    context.lineWidth = 2;
+    context.stroke();
+
+    // arrowhead
+    context.beginPath();
+    context.moveTo(toX, toY);
+    context.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6),
+                   toY - headlen * Math.sin(angle - Math.PI / 6));
+    context.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6),
+                   toY - headlen * Math.sin(angle + Math.PI / 6));
+    context.lineTo(toX, toY);
+    context.fillStyle = color;
+    context.fill();
+}
