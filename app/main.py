@@ -9,6 +9,11 @@ from werkzeug.utils import secure_filename
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+import cv2
+import uuid  # do tworzenia unikalnych folderów
+from flask import jsonify
+
+
 
 load_dotenv()
 app = Flask(__name__)
@@ -17,7 +22,7 @@ app.secret_key = os.getenv("SECRET_KEY")
 # MYSQL DATABASE CONFIG
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/SpermVizz' # os.getenv("DATABASE_URL")  #'mysql+pymysql://root:@localhost/SpermVizz'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/SpermVizz'  #os.getenv("DATABASE_URL") # 'mysql+pymysql://root:@localhost/SpermVizz' 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MODEL_FOLDER'] = os.path.join(BASE_DIR, 'video_processing', 'models')
@@ -87,6 +92,12 @@ def login():
 @app.route('/wideo.html', methods=['GET', 'POST'])
 @login_required
 def video():
+
+     # FILES LIST IN UPLOAD_FOLDER
+    upload_folder = app.config['UPLOAD_FOLDER']
+    files = os.listdir(upload_folder)
+    files = [f for f in files if os.path.isfile(os.path.join(upload_folder, f))]
+
     if request.method == 'POST':
         file = request.files['file']
         if file.filename == '':
@@ -98,12 +109,7 @@ def video():
         flash('Upload successful!')
         #return redirect(url_for('video'))
 
-        return render_template('segmentacja.html')
-
-    # FILES LIST IN UPLOAD_FOLDER
-    upload_folder = app.config['UPLOAD_FOLDER']
-    files = os.listdir(upload_folder)
-    files = [f for f in files if os.path.isfile(os.path.join(upload_folder, f))]
+        return render_template('wideo.html', files =files)
 
     return render_template('wideo.html', files =files)
 
@@ -124,11 +130,101 @@ def interface():
 
     return render_template('segmentacja.html',models=models, files=files)
 
+
+
+
+
+@app.route('/upload_and_extract', methods=['POST'])
+@login_required
+def upload_and_extract():
+    file = request.files['file']
+    if not file:
+        return jsonify({'success': False, 'error': 'No file uploaded!'})
+
+    # Zapisywanie wideo
+    filename = secure_filename(file.filename)
+    video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    file.save(video_path)
+
+    # Tworzenie nowego folderu
+    unique_folder = str(uuid.uuid4())  # np. 'folder1' -> '1d2e3f...'
+    frames_dir = os.path.join(app.config['UPLOAD_FOLDER'], unique_folder)
+    os.makedirs(frames_dir, exist_ok=True)
+
+    # Klatkowanie (OpenCV)
+    interval = 1  # co 1 sekundę
+    cap = cv2.VideoCapture(video_path)
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    frame_count = 0
+    saved_count = 0
+    interval_frames = int(fps * interval)
+    frames_urls = []
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        if frame_count % interval_frames == 0:
+            frame_filename = f"frame_{saved_count+1}.jpg"
+            frame_path = os.path.join(frames_dir, frame_filename)
+            cv2.imwrite(frame_path, frame)
+            frames_urls.append(url_for('static', filename=f"uploads/{unique_folder}/{frame_filename}"))
+            saved_count += 1
+
+        frame_count += 1
+
+    cap.release()
+
+    return jsonify({'success': True, 'frames': frames_urls})
+
+
+
+
+# MY ACCOUNT - COMPARE MODELS
+@app.route('/compare.html', methods=['GET', 'POST'])
+@login_required
+def compareUI():
+    # SEGMENTATION MODEL LIST IN MODEL FOLDER
+    model_folder = app.config['MODEL_FOLDER']
+    models = os.listdir(model_folder)
+    models = [m for m in models if os.path.isfile(os.path.join(model_folder, m))]
+
+    # FILE LIST IN UPLOAD FOLDER
+    upload_folder = app.config['UPLOAD_FOLDER']
+    files = os.listdir(upload_folder)
+    files = [f for f in files if os.path.isfile(os.path.join(upload_folder, f))]
+
+    return render_template('compare.html',models=models, files=files)
+
+# MY ACCOUNT - SPERM CELL TRACK
+@app.route('/tracking.html', methods=['GET', 'POST'])
+@login_required
+def trackUI():
+    # SEGMENTATION MODEL LIST IN MODEL FOLDER
+    model_folder = app.config['MODEL_FOLDER']
+    models = os.listdir(model_folder)
+    models = [m for m in models if os.path.isfile(os.path.join(model_folder, m))]
+
+    # FILE LIST IN UPLOAD FOLDER
+    upload_folder = app.config['UPLOAD_FOLDER']
+    files = os.listdir(upload_folder)
+    files = [f for f in files if os.path.isfile(os.path.join(upload_folder, f))]
+
+    return render_template('tracking.html',models=models, files=files)
+
+
 # SEGMENTATION MODELS
 @app.route('/video_processing/<path:modelname>')
 @login_required
 def video_processing(modelname):
     return f"Modle path: {modelname}"
+
+
+
+# CADING VIDEOS
+
+
 
 # LOGOUT
 @app.route('/logout', methods=['POST'])
@@ -143,5 +239,5 @@ def logout():
 if __name__ == '__main__':
     app.run(debug=True)
 
-# with app.app_context():
-#      db.create_all()  # tworzy tabele w bazie
+with app.app_context():
+      db.create_all()  # tworzy tabele w bazie

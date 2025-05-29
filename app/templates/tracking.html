@@ -73,46 +73,6 @@
       </section>
 
       
-        <h1>Upload your video</h1>
-  <form id="uploadForm" enctype="multipart/form-data">
-    <input type="file" name="file" accept="video/*" required>
-    <button type="submit">Upload and Extract Frames</button>
-  </form>
-
-  <div id="frame-container"></div>
-  <input type="range" id="frame-slider" min="0" step="1" value="0">
-
-  <script>
-    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      const response = await fetch('/upload_and_extract', {
-        method: 'POST',
-        body: formData
-      });
-      const result = await response.json();
-
-      if (result.success) {
-        const frameContainer = document.getElementById('frame-container');
-        frameContainer.innerHTML = '';
-        result.frames.forEach((frameUrl, idx) => {
-          const img = document.createElement('img');
-          img.src = frameUrl;
-          if (idx === 0) img.style.display = 'block';
-          frameContainer.appendChild(img);
-        });
-        const slider = document.getElementById('frame-slider');
-        slider.max = result.frames.length - 1;
-        slider.oninput = function() {
-          const images = frameContainer.querySelectorAll('img');
-          images.forEach(img => img.style.display = 'none');
-          images[this.value].style.display = 'block';
-        };
-      } else {
-        alert('Error: ' + result.error);
-      }
-    });
-  </script>
 
       <section>
         <div class="my-files">
@@ -126,25 +86,25 @@
       </section>
     </div>
 
-
+    
 
 
   <div class="video-list">
     <div class="main-content">
        <div class="video-wrapper">
-      <div class="video-tile">Wideo 1</div>
+      <div class="video-tile">1 klatka</div>
         <div class="video-caption">Opis 1</div>
     </div>
     <div class="video-wrapper">
-      <div class="video-tile">Wideo 2  </div>
+      <div class="video-tile">2 klatka  </div>
         <div class="video-caption">Opis 2</div>
     </div>
     <div class="video-wrapper">
-      <div class="video-tile">Wideo 3</div>
+      <div class="video-tile">3 klatka</div>
         <div class="video-caption">Opis 3</div>
       </div>
       <div class="video-wrapper">
-      <div class="video-tile">Wideo 4 </div>
+      <div class="video-tile">4 klatka </div>
         <div class="video-caption">Opis 4</div>
      </div>
     </div>
@@ -208,30 +168,5 @@
 
     }
   </script>
-
-<script>
-function cutCage() {
-  const filename = document.getElementById('video-selector').value;
-  const start = document.getElementById('start-time').value;
-  const end = document.getElementById('end-time').value;
-
-  fetch('/cut_cage', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: `filename=${encodeURIComponent(filename)}&start=${start}&end=${end}`
-  })
-  .then(res => res.json())
-  .then(data => {
-    const resDiv = document.getElementById('cut-result');
-    if (data.success) {
-      resDiv.innerHTML = `<p>Fragment zapisany: <a href="${data.output}" target="_blank">Zobacz</a></p>`;
-    } else {
-      resDiv.innerHTML = `<p>Błąd: ${data.error}</p>`;
-    }
-  });
-}
-</script>
-
-
 </body>
 </html>
