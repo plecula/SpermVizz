@@ -110,12 +110,7 @@ function redrawAnnotations() {
                 context.closePath();
                 break;
             case 'broken-tail':
-                context.beginPath();
-                context.ellipse(ann.x, ann.y, ann.width, ann.height, 0, 0, Math.PI * 2);
-                context.strokeStyle = "red";
-                context.lineWidth = 2;
-                context.stroke();
-                context.closePath();
+                drawArrow(ann.startX, ann.startY, ann.x, ann.y, "red");
                 break;
         }
       
@@ -159,12 +154,7 @@ function redrawAnnotations() {
             context.closePath();
             break;
         case 'broken-tail':
-            context.beginPath();
-            context.ellipse(x, y, width, height, 0, 0, Math.PI * 2);
-            context.strokeStyle = "red";
-            context.lineWidth = 2;
-            context.stroke();
-            context.closePath();
+            drawArrow(startX, startY, x, y, "red");
             break;
     }
 
