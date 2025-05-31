@@ -133,50 +133,46 @@ def interface():
 
 
 
-
-@app.route('/upload_and_extract', methods=['POST'])
+@app.route('/extract_frames_existing', methods=['POST'])
 @login_required
-def upload_and_extract():
-    file = request.files['file']
-    if not file:
-        return jsonify({'success': False, 'error': 'No file uploaded!'})
-
-    # Zapisywanie wideo
-    filename = secure_filename(file.filename)
+def extract_frames_existing():
+    filename = request.form['filename']
     video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    file.save(video_path)
 
-    # Tworzenie nowego folderu
-    unique_folder = str(uuid.uuid4())  # np. 'folder1' -> '1d2e3f...'
-    frames_dir = os.path.join(app.config['UPLOAD_FOLDER'], unique_folder)
-    os.makedirs(frames_dir, exist_ok=True)
+    try:
+        # Stwórz nowy folder
+        unique_folder = str(uuid.uuid4())
+        frames_dir = os.path.join(app.config['UPLOAD_FOLDER'], unique_folder)
+        os.makedirs(frames_dir, exist_ok=True)
 
-    # Klatkowanie (OpenCV)
-    interval = 1  # co 1 sekundę
-    cap = cv2.VideoCapture(video_path)
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    frame_count = 0
-    saved_count = 0
-    interval_frames = int(fps * interval)
-    frames_urls = []
+        # Klatkowanie (OpenCV)
+        interval = 1  # co 1 sekundę
+        cap = cv2.VideoCapture(video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = 0
+        saved_count = 0
+        interval_frames = int(fps * interval)
+        frames_urls = []
 
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
 
-        if frame_count % interval_frames == 0:
-            frame_filename = f"frame_{saved_count+1}.jpg"
-            frame_path = os.path.join(frames_dir, frame_filename)
-            cv2.imwrite(frame_path, frame)
-            frames_urls.append(url_for('static', filename=f"uploads/{unique_folder}/{frame_filename}"))
-            saved_count += 1
+            if frame_count % interval_frames == 0:
+                frame_filename = f"frame_{saved_count+1}.jpg"
+                frame_path = os.path.join(frames_dir, frame_filename)
+                cv2.imwrite(frame_path, frame)
+                frames_urls.append(url_for('static', filename=f"uploads/{unique_folder}/{frame_filename}"))
+                saved_count += 1
 
-        frame_count += 1
+            frame_count += 1
 
-    cap.release()
+        cap.release()
 
-    return jsonify({'success': True, 'frames': frames_urls})
+        return jsonify({'success': True, 'frames': frames_urls})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 
 
@@ -222,7 +218,6 @@ def video_processing(modelname):
 
 
 
-# CADING VIDEOS
 
 
 
@@ -239,5 +234,5 @@ def logout():
 if __name__ == '__main__':
     app.run(debug=True)
 
-with app.app_context():
-      db.create_all()  # tworzy tabele w bazie
+# with app.app_context():
+#      db.create_all()  # tworzy tabele w bazie

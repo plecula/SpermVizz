@@ -34,6 +34,13 @@ font-family: 'Italiana'; src: url("D:\studia\studia sem. VI\RAIM\SpermVizz\app\s
   color: #5f88dc;
 }
 
+.view-text {
+  margin-left: 20px; 
+  margin-top: 35px; 
+  font-weight: bold;
+  font-size: 18px;
+}
+
 /* Ikona menu (burger) */
 .menu-icon {
   height: 48px;
@@ -93,14 +100,17 @@ font-family: 'Italiana'; src: url("D:\studia\studia sem. VI\RAIM\SpermVizz\app\s
 
   .container {
     display: flex;
-    height: calc(100vh - 62px); /* wysokość bez header */
+    /* height: calc(100vh - 62px); wysokość bez header */
+    height: fit-content;
     padding: 20px;
     box-sizing: border-box;
+    align-items: flex-start;
   }
 
   /* Sidebar */
   .sidebar {
     width: 120px;
+    height: fit-content;
     background: #f0f0f0;
     border-radius: 15px;
     padding: 15px;
@@ -108,32 +118,20 @@ font-family: 'Italiana'; src: url("D:\studia\studia sem. VI\RAIM\SpermVizz\app\s
     flex-direction: column;
     gap: 20px;
     font-size: 14px;
+
   }
   .sidebar section {
     background: #ddd;
     border-radius: 15px;
     padding: 10px;
   }
-  .sidebar h2 {
-    font-size: 18px;
-    margin: 0 0 10px 0;
-    text-decoration: underline;
+  .sidebar section label {
+    font-size: 18px; 
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
   }
-  .tools-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    color: #444;
-  }
-  .tools-list li {
-    margin: 8px 0;
-    cursor: default;
-  }
-  .tools-list li.eroded {color: green;}
-  .tools-list li.missing {color: goldenrod;}
-  .tools-list li.short {color: navy;}
-  .tools-list li.broken {color: brown;}
-  .tools-list li.artifact {color: purple;}
+  
 
   
 /* My models + My files */
@@ -146,6 +144,7 @@ font-family: 'Italiana'; src: url("D:\studia\studia sem. VI\RAIM\SpermVizz\app\s
 
 .my-models label,
 .my-files label {
+  font-size: 18px; 
   font-weight: bold;
   margin-bottom: 5px;
   display: block;
@@ -245,3 +244,106 @@ border: none;
 border-bottom: none;
 outline: none;
 }
+
+/* wrapper */
+.sidebars-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-left: 20px;
+}
+/* Sidebar right */
+.sidebar-right {
+  width: 200px;
+  
+  height: fit-content;
+  background: #f0f0f0;
+  border-radius: 15px;
+  padding: 10px;
+  display: flex;
+  margin-left: 20px;
+  flex-direction: column;
+  gap: 20px;
+  font-size: 18px;
+}
+.sidebar-right section,
+.sidebar-tools section {
+  background: #ddd;
+  border-radius: 15px;
+  padding: 10px;
+}
+.sidebar-right section label,
+.sidebar-tools section label {
+  font-weight: bold;
+  
+}
+.view-switch, .export, .tools-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.view-switch li, .export li {
+  margin: 8px 0;
+}
+
+.view-switch a, .export a {
+  text-decoration: none;
+  color: #333;
+  display: block;
+  background: #ddd;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.view-switch a:hover, .export a:hover {
+  background: #ccc;
+}
+
+/* tools */
+
+.sidebar-tools {
+  margin-top: 55px;
+  width: 200px; 
+  height: fit-content;
+  background: #f0f0f0;
+  border-radius: 15px;
+  padding: 10px;
+  display: flex;
+  margin-left: 20px;
+  flex-direction:column;
+  gap: 20px;
+  font-size: 18px;
+}
+.tools-list li {
+  margin: 8px 0;
+  text-decoration: none;
+  color: #333;
+  display: block;
+  background: #ddd;
+  padding: 8px;
+  border-radius: 8px;
+}
+.tools-list li:hover {
+  background: #ccc;
+}
+.tools-list li.eroded {color: green;}
+.tools-list li.missing {color: goldenrod;}
+.tools-list li.short {color: navy;}
+.tools-list li.broken {color: brown;}
+.tools-list li.artifact {color: purple;}
+
+/* container for charts and analysis */
+.charts-container {
+  height: 200px;
+}
+
+/* canvas */
+#canvas {
+  border: 1px solid #ccc;
+}
+#frame-slider {
+  display: none;
+
+}
+

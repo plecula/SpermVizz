@@ -73,85 +73,55 @@
       </section>
 
       
-        <h1>Upload your video</h1>
-  <form id="uploadForm" enctype="multipart/form-data">
-    <input type="file" name="file" accept="video/*" required>
-    <button type="submit">Upload and Extract Frames</button>
-  </form>
 
-  <div id="frame-container"></div>
-  <input type="range" id="frame-slider" min="0" step="1" value="0">
-
-  <script>
-    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const formData = new FormData(this);
-      const response = await fetch('/upload_and_extract', {
-        method: 'POST',
-        body: formData
-      });
-      const result = await response.json();
-
-      if (result.success) {
-        const frameContainer = document.getElementById('frame-container');
-        frameContainer.innerHTML = '';
-        result.frames.forEach((frameUrl, idx) => {
-          const img = document.createElement('img');
-          img.src = frameUrl;
-          if (idx === 0) img.style.display = 'block';
-          frameContainer.appendChild(img);
-        });
-        const slider = document.getElementById('frame-slider');
-        slider.max = result.frames.length - 1;
-        slider.oninput = function() {
-          const images = frameContainer.querySelectorAll('img');
-          images.forEach(img => img.style.display = 'none');
-          images[this.value].style.display = 'block';
-        };
-      } else {
-        alert('Error: ' + result.error);
-      }
-    });
-  </script>
-
-      <section>
-        <div class="my-files">
-          <label>My files</label>
-          <ul class="myy-files">
-            {% for file in files %}
-              <li><a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank">{{ file }}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
-      </section>
-    </div>
+  <section>
+  <div class="my-files">
+    <label>My files</label>
+    <ul class="myy-files">
+      {% for file in files %}
+        <li>
+          <a href="#" class="video-file" data-filename="{{ file }}">{{ file }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
 
 
-
+</div>
 
   <div class="video-list">
+     <div id="frame-container"></div>
+  <input type="range" id="frame-slider" min="0" step="1" value="0">
+</div>
     <div class="main-content">
-       <div class="video-wrapper">
-      <div class="video-tile">Wideo 1</div>
+        <div class="video-wrapper">
+        <div class="video-tile">Wideo 1</div>
         <div class="video-caption">Opis 1</div>
-    </div>
-    <div class="video-wrapper">
-      <div class="video-tile">Wideo 2  </div>
+      </div>
+      <div class="video-wrapper">
+        <div class="video-tile">Wideo 2  </div>
         <div class="video-caption">Opis 2</div>
-    </div>
-    <div class="video-wrapper">
-      <div class="video-tile">Wideo 3</div>
+      </div>
+      <div class="video-wrapper">
+        <div class="video-tile">Wideo 3</div>
         <div class="video-caption">Opis 3</div>
       </div>
       <div class="video-wrapper">
-      <div class="video-tile">Wideo 4 </div>
+        <div class="video-tile">
+          <canvas id="canvas" width="450" height="350"></canvas>
+        </div>
         <div class="video-caption">Opis 4</div>
-     </div>
+     
     </div>
-  </div>
+
+   </div>
+
   <div class="sidebars-wrapper">
+    
     <div class="sidebar-right">
       <section>
+        
 
         <div class="views">
           <label>VIEW OPTIONS</label>
@@ -173,26 +143,37 @@
       </section>
     </div>
 
-    <div class="sidebar-tools">
+
+   <div class="sidebar-tools">
       <section>
         <label>TOOLS</label>
         <ul class="tools-list">
-          <li class="eroded">eroded head</li>
-          <li class="missing">missing sperm cell</li>
-          <li class="short">short tail</li>
-          <li class="broken">broken tail</li>
-          <li class="artifact">artifact</li>
+          <button onclick="selectTool('eroded-head')"><li class="eroded">eroded head</li></button>
+          <button onclick="selectTool('missing-cell')"><li class="missing">missing sperm cell</li></button>
+          <button onclick="selectTool('short-tail')"><li class="short">short tail</li></button>
+          <button onclick="selectTool('broken-tail')"><li class="broken">broken tail</li></button>
+          <button onclick="selectTool('artifact')"><li class="artifact">artifact</li></button>
+          <button onclick="selectTool('clear-last')"><li class="clear-last">clear last</li></button>
+          <button onclick="selectTool('clear-all')"><li class="clear-all">clear all</li></button>
+          <div class="rotation-tool">
+            <label for="rotation">Rotate:</label>
+            <input type="range" id="rotationSlider" min="0" max="360" value="0">
+
+          </div>
         </ul>
       </section>
     </div>
 
   </div>
-</div>
 
-<div class="charts-container">
+
+
+
+ <!--<div class="charts-container">
 <label>charts and analysis here!</label>
-
 </div>
+-->
+ <script src="{{ url_for('static', filename='js/tools.js') }}"></script>
 
   <script>
     function toggleMenu() {
@@ -230,6 +211,52 @@ function cutCage() {
     }
   });
 }
+</script>
+
+  <script> //skrypt do segmentacji
+document.querySelectorAll('.video-file').forEach(link => {
+  link.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const filename = this.getAttribute('data-filename');
+
+    const formData = new FormData();
+    formData.append('filename', filename);
+
+    // Wysyłamy żądanie do backendu
+    const response = await fetch('/extract_frames_existing', {  // endpoint do obsługi istniejącego pliku
+      method: 'POST',
+      body: formData
+    });
+    const result = await response.json();
+
+   if (result.success) {
+  const frameContainer = document.getElementById('frame-container');
+  frameContainer.innerHTML = '';
+
+  result.frames.forEach((frameUrl, idx) => {
+    const img = document.createElement('img');
+    img.src = frameUrl;
+
+    // Ukrywamy wszystkie, oprócz pierwszej klatki
+    img.style.display = idx === 0 ? 'block' : 'none';
+    frameContainer.appendChild(img);
+  });
+
+  const slider = document.getElementById('frame-slider');
+  slider.max = result.frames.length - 1;
+  slider.value = 0; // Ustaw suwak na start
+   slider.style.display = 'block'; 
+
+  // Obsługa suwaka
+  slider.oninput = function() {
+    const images = frameContainer.querySelectorAll('img');
+    images.forEach(img => img.style.display = 'none'); // Ukryj wszystkie
+    images[this.value].style.display = 'block';        // Pokaż tylko wybraną
+  };
+}
+
+  });
+});
 </script>
 
 
