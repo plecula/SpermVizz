@@ -22,6 +22,7 @@
     <div class="logo" href="index.html">
       <img src="{{ url_for('static', filename='IMG/sperm.png') }}" alt="Logo">
       <span>Sperm<span class="blue">Vizz</span></span>
+        <p class="view-text">Check quality</p> 
     </div>
     <svg id="menuIcon" class="menu-icon" onclick="toggleMenu()" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="3" y1="12" x2="21" y2="12"/>
@@ -72,7 +73,6 @@
 
       </section>
 
-      
 
   <section>
   <div class="my-files">
@@ -88,13 +88,16 @@
 </section>
 
 
-</div>
 
+
+</div>
+    
   <div class="video-list">
      <div id="frame-container"></div>
   <input type="range" id="frame-slider" min="0" step="1" value="0">
 </div>
     <div class="main-content">
+
         <div class="video-wrapper">
         <div class="video-tile">Wideo 1</div>
         <div class="video-caption">Opis 1</div>
@@ -112,7 +115,7 @@
           <canvas id="canvas" width="450" height="350"></canvas>
         </div>
         <div class="video-caption">Opis 4</div>
-     
+ 
     </div>
 
    </div>
@@ -145,6 +148,37 @@
 
 
    <div class="sidebar-tools">
+
+<!--       </div>
+    </div>
+  </div>
+
+  <div class="sidebars-wrapper">
+    <div class="sidebar-right">
+      <section>
+
+        <div class="views">
+          <label>VIEW OPTIONS</label>
+          <ul class="view-switch">
+            <li><a href="{{ url_for('interface') }}">Check quality</a></li>
+            <li><a href="{{ url_for('compareUI') }}">Compare models</a></li>
+            <li><a href="{{ url_for('trackUI') }}">Sperm cell track</a></li>
+          </ul>
+        </div>
+
+      </section>
+
+      <section>
+        <label>EXPORT TO</label>
+        <ul class="export">
+          <li><a href="{{ url_for('interface') }}">PNG</a></li>
+          <li><a href="{{ url_for('interface') }}">JSON</a></li>         
+        </ul>
+      </section>
+    </div>
+
+    <div class="sidebar-tools"> -->
+
       <section>
         <label>TOOLS</label>
         <ul class="tools-list">
@@ -160,6 +194,7 @@
             <input type="range" id="rotationSlider" min="0" max="360" value="0">
 
           </div>
+
         </ul>
       </section>
     </div>
@@ -174,6 +209,12 @@
 </div>
 -->
  <script src="{{ url_for('static', filename='js/tools.js') }}"></script>
+
+<div class="charts-container">
+<label>charts and analysis here!</label>
+
+</div>
+  <script src="{{ url_for('static', filename='js/tools.js') }}"></script>
 
   <script>
     function toggleMenu() {

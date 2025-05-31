@@ -130,9 +130,6 @@ def interface():
 
     return render_template('segmentacja.html',models=models, files=files)
 
-
-
-
 @app.route('/extract_frames_existing', methods=['POST'])
 @login_required
 def extract_frames_existing():
@@ -173,7 +170,6 @@ def extract_frames_existing():
         return jsonify({'success': True, 'frames': frames_urls})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
-
 
 
 
