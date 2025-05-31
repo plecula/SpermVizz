@@ -342,3 +342,7 @@ outline: none;
 #canvas {
   border: 1px solid #ccc;
 }
+#frame-slider {
+  display: none;
+
+}

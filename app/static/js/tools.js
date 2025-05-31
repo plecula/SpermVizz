@@ -3,6 +3,7 @@ let annotations = [];
 
 function selectTool(tool) {
     currentTool = tool;
+
     if (currentTool == 'clear-last') {
         annotations.pop();        
         context.clearRect(0, 0, canvas.width, canvas.height);
@@ -15,6 +16,7 @@ function selectTool(tool) {
         redrawAnnotations();
         currentTool = null;
     }
+
 }
 
 const canvas = document.getElementById("canvas");
@@ -98,8 +100,6 @@ document.getElementById("rotationSlider").addEventListener("input", (e) => {
       redrawAnnotations();
     }
   });
-  
-
 
 function redrawAnnotations() {
     annotations.forEach((ann) => {
@@ -147,7 +147,6 @@ function redrawAnnotations() {
             case 'broken-tail':
                 drawArrow(ann.startX, ann.startY, ann.x, ann.y, "red");
                 break;
-            
         }
       
     });
@@ -192,7 +191,7 @@ function redrawAnnotations() {
         case 'broken-tail':
             drawArrow(startX, startY, x, y, "red");
             break;
-        
+
     }
 
   }

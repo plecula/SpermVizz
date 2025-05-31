@@ -9,6 +9,11 @@ from werkzeug.utils import secure_filename
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+import cv2
+import uuid  # do tworzenia unikalnych folderów
+from flask import jsonify
+
+
 
 load_dotenv()
 app = Flask(__name__)
@@ -17,7 +22,7 @@ app.secret_key = os.getenv("SECRET_KEY")
 # MYSQL DATABASE CONFIG
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/SpermVizz' # os.getenv("DATABASE_URL")  #'mysql+pymysql://root:@localhost/SpermVizz'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@localhost/SpermVizz'  #os.getenv("DATABASE_URL") # 'mysql+pymysql://root:@localhost/SpermVizz' 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MODEL_FOLDER'] = os.path.join(BASE_DIR, 'video_processing', 'models')
@@ -125,6 +130,49 @@ def interface():
 
     return render_template('segmentacja.html',models=models, files=files)
 
+@app.route('/extract_frames_existing', methods=['POST'])
+@login_required
+def extract_frames_existing():
+    filename = request.form['filename']
+    video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    try:
+        # Stwórz nowy folder
+        unique_folder = str(uuid.uuid4())
+        frames_dir = os.path.join(app.config['UPLOAD_FOLDER'], unique_folder)
+        os.makedirs(frames_dir, exist_ok=True)
+
+        # Klatkowanie (OpenCV)
+        interval = 1  # co 1 sekundę
+        cap = cv2.VideoCapture(video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = 0
+        saved_count = 0
+        interval_frames = int(fps * interval)
+        frames_urls = []
+
+        while cap.isOpened():
+            ret, frame = cap.read()
+            if not ret:
+                break
+
+            if frame_count % interval_frames == 0:
+                frame_filename = f"frame_{saved_count+1}.jpg"
+                frame_path = os.path.join(frames_dir, frame_filename)
+                cv2.imwrite(frame_path, frame)
+                frames_urls.append(url_for('static', filename=f"uploads/{unique_folder}/{frame_filename}"))
+                saved_count += 1
+
+            frame_count += 1
+
+        cap.release()
+
+        return jsonify({'success': True, 'frames': frames_urls})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+
 # MY ACCOUNT - COMPARE MODELS
 @app.route('/compare.html', methods=['GET', 'POST'])
 @login_required
@@ -163,6 +211,11 @@ def trackUI():
 @login_required
 def video_processing(modelname):
     return f"Modle path: {modelname}"
+
+
+
+
+
 
 # LOGOUT
 @app.route('/logout', methods=['POST'])

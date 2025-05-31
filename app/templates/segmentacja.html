@@ -73,24 +73,32 @@
 
       </section>
 
-      
 
-      <section>
-        <div class="my-files">
-          <label>My files</label>
-          <ul class="myy-files">
-            {% for file in files %}
-              <li><a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank">{{ file }}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
-      </section>
-    </div>
+  <section>
+  <div class="my-files">
+    <label>My files</label>
+    <ul class="myy-files">
+      {% for file in files %}
+        <li>
+          <a href="#" class="video-file" data-filename="{{ file }}">{{ file }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
 
+
+
+
+</div>
     
   <div class="video-list">
+     <div id="frame-container"></div>
+  <input type="range" id="frame-slider" min="0" step="1" value="0">
+</div>
     <div class="main-content">
-      <div class="video-wrapper">
+
+        <div class="video-wrapper">
         <div class="video-tile">Wideo 1</div>
         <div class="video-caption">Opis 1</div>
       </div>
@@ -107,7 +115,41 @@
           <canvas id="canvas" width="450" height="350"></canvas>
         </div>
         <div class="video-caption">Opis 4</div>
-      </div>
+ 
+    </div>
+
+   </div>
+
+  <div class="sidebars-wrapper">
+    
+    <div class="sidebar-right">
+      <section>
+        
+
+        <div class="views">
+          <label>VIEW OPTIONS</label>
+          <ul class="view-switch">
+            <li><a href="{{ url_for('interface') }}">Check quality</a></li>
+            <li><a href="{{ url_for('compareUI') }}">Compare models</a></li>
+            <li><a href="{{ url_for('trackUI') }}">Sperm cell track</a></li>
+          </ul>
+        </div>
+
+      </section>
+
+      <section>
+        <label>EXPORT TO</label>
+        <ul class="export">
+          <li><a href="{{ url_for('interface') }}">PNG</a></li>
+          <li><a href="{{ url_for('interface') }}">JSON</a></li>         
+        </ul>
+      </section>
+    </div>
+
+
+   <div class="sidebar-tools">
+
+<!--       </div>
     </div>
   </div>
 
@@ -135,7 +177,8 @@
       </section>
     </div>
 
-    <div class="sidebar-tools">
+    <div class="sidebar-tools"> -->
+
       <section>
         <label>TOOLS</label>
         <ul class="tools-list">
@@ -149,14 +192,23 @@
           <div class="rotation-tool">
             <label for="rotation">Rotate:</label>
             <input type="range" id="rotationSlider" min="0" max="360" value="0">
+
           </div>
-          
+
         </ul>
       </section>
     </div>
 
   </div>
+
+
+
+
+ <!--<div class="charts-container">
+<label>charts and analysis here!</label>
 </div>
+-->
+ <script src="{{ url_for('static', filename='js/tools.js') }}"></script>
 
 <div class="charts-container">
 <label>charts and analysis here!</label>
@@ -178,5 +230,76 @@
 
     }
   </script>
+
+<script>
+function cutCage() {
+  const filename = document.getElementById('video-selector').value;
+  const start = document.getElementById('start-time').value;
+  const end = document.getElementById('end-time').value;
+
+  fetch('/cut_cage', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+    body: `filename=${encodeURIComponent(filename)}&start=${start}&end=${end}`
+  })
+  .then(res => res.json())
+  .then(data => {
+    const resDiv = document.getElementById('cut-result');
+    if (data.success) {
+      resDiv.innerHTML = `<p>Fragment zapisany: <a href="${data.output}" target="_blank">Zobacz</a></p>`;
+    } else {
+      resDiv.innerHTML = `<p>Błąd: ${data.error}</p>`;
+    }
+  });
+}
+</script>
+
+  <script> //skrypt do segmentacji
+document.querySelectorAll('.video-file').forEach(link => {
+  link.addEventListener('click', async function(e) {
+    e.preventDefault();
+    const filename = this.getAttribute('data-filename');
+
+    const formData = new FormData();
+    formData.append('filename', filename);
+
+    // Wysyłamy żądanie do backendu
+    const response = await fetch('/extract_frames_existing', {  // endpoint do obsługi istniejącego pliku
+      method: 'POST',
+      body: formData
+    });
+    const result = await response.json();
+
+   if (result.success) {
+  const frameContainer = document.getElementById('frame-container');
+  frameContainer.innerHTML = '';
+
+  result.frames.forEach((frameUrl, idx) => {
+    const img = document.createElement('img');
+    img.src = frameUrl;
+
+    // Ukrywamy wszystkie, oprócz pierwszej klatki
+    img.style.display = idx === 0 ? 'block' : 'none';
+    frameContainer.appendChild(img);
+  });
+
+  const slider = document.getElementById('frame-slider');
+  slider.max = result.frames.length - 1;
+  slider.value = 0; // Ustaw suwak na start
+   slider.style.display = 'block'; 
+
+  // Obsługa suwaka
+  slider.oninput = function() {
+    const images = frameContainer.querySelectorAll('img');
+    images.forEach(img => img.style.display = 'none'); // Ukryj wszystkie
+    images[this.value].style.display = 'block';        // Pokaż tylko wybraną
+  };
+}
+
+  });
+});
+</script>
+
+
 </body>
 </html>
