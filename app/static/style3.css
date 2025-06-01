@@ -232,6 +232,7 @@ width: 450px; /* wypełnia grid */
 box-sizing: border-box;
 overflow: hidden;
 height: 350px; /* na wypadek zaokrągleń */
+position: relative;
 }
 
 /* główna zawartość kafelka (video) */
@@ -364,6 +365,17 @@ outline: none;
 /* canvas */
 #canvas {
   border: 1px solid #ccc;
+  background: transparent;
+  z-index: 2;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+#mask-canvas{
+  z-index: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 #frame-slider {
   display: none;

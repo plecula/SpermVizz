@@ -58,10 +58,6 @@
   <div class="container">
     <div class="sidebar">
           <section>
-            <!-- <div><strong>Model:</strong></div>
-            <div>- model1</div>
-            <div>- model2</div> -->
-            <!-- mojje proby xd -->
             <div class="my-models">
               <label>My models</label>
               <ul class="myy-models">
@@ -94,8 +90,10 @@
       <div class="video-list">
         <div id="frame-container"></div>
         <input type="range" id="frame-slider" min="0" step="1" value="0">
-        <button onclick="segmentFrame('f_512v12_0d9', 'frame_1.jpg')">Segment</button>
-        <button>Next frame</button>
+        <p>Current folder: <span id="current-folder-name"></span></p>
+        <p>Current frame: <span id="current-frame-name"></span></p>
+        <button onclick="segmentCurrentFrame()">Segment</button>
+        <button id="next-frame-btn" onclick="nextFrame()">Next frame</button>
       </div>
       
       <div class="video-right">
@@ -106,7 +104,9 @@
 
         <div class="video-wrapper">
             <div class="video-tile">
-              <canvas id="canvas" width="450" height="350"></canvas>
+              <canvas id="mask-canvas" width="450" height="350"></canvas>
+              <canvas id="canvas" width="450" height="350"></canvas>           
+              
             </div>
             <div class="video-caption">Opis 2</div>
         </div>

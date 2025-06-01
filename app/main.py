@@ -17,6 +17,8 @@ import numpy as np
 import time
 import torch
 
+#os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True" # for better performance
+
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
@@ -34,15 +36,18 @@ bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'      # if not registered, go to login page
 
+print(torch.cuda.is_available())
+
+#print(torch.cuda.get_device_name(0))
 # LOAD SEG MODEL
-sam_checkpoint = BASE_DIR / "video_processing" / "models" / "sam_vit_l_0b3195.pth"
-model_type = "vit_l"
+sam_checkpoint = BASE_DIR / "video_processing" / "models" / "sam_vit_b_01ec64.pth"      # or other one
+model_type = "vit_b"
 sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-sam.to("cuda")   # or cuda 
+sam.to("cuda")   # or cpu!!!  
 mask_generator = SamAutomaticMaskGenerator(
     sam,
     pred_iou_thresh= 0.95,
-    points_per_side=16
+    points_per_side=32
 )
 
 # USER MODEL
@@ -160,7 +165,7 @@ def extract_frames_existing():
         os.makedirs(frames_dir, exist_ok=True)
 
         # Frames (OpenCV)
-        interval = 1  # co 1 sekundę
+        interval = 1  # 1 sec
         cap = cv2.VideoCapture(video_path)
         fps = cap.get(cv2.CAP_PROP_FPS)
         frame_count = 0
@@ -184,7 +189,11 @@ def extract_frames_existing():
 
         cap.release()
 
-        return jsonify({'success': True, 'frames': frames_urls})
+        return jsonify({
+            'success': True, 
+            'frames': frames_urls,
+            'folder': unique_folder
+            })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
@@ -197,17 +206,18 @@ def segment_frame(folder, frame_name):
 
         if not frame_path.exists():
             return jsonify({'success': False, 'error': 'Frame not found'})
-
-        
+ 
         start = time.time()
         image = cv2.imread(str(frame_path))
-        masks = mask_generator.generate(image)
+        
+        with torch.no_grad():                   # saves memory
+            masks = mask_generator.generate(image)
+       
         masks_sorted = sorted(masks, key=lambda x: x['predicted_iou'], reverse=True)
         best_mask = masks_sorted[0]['segmentation']
         print("Mask generation time:", time.time() - start)
         
-        # Zapisz maskę
-        #mask_filename = f"mask_{uuid.uuid4().hex[:8]}.png"
+        # Save mask
         mask_filename = f"m_{frame_name}_{folder}_{uuid.uuid4().hex[:6]}"
         mask_path = BASE_DIR / "app" / "static" / "masks" / mask_filename
         os.makedirs(mask_path.parent, exist_ok=True)
@@ -215,12 +225,13 @@ def segment_frame(folder, frame_name):
         mask_image = (1 - best_mask) * 255
         cv2.imwrite(str(mask_path), mask_image.astype(np.uint8))
 
-        return jsonify({'success': True, 'mask_url': url_for('static', filename=f"masks/{mask_filename}")})
+        return jsonify({
+            'success': True, 
+            'mask_url': url_for('static', filename=f"masks/{mask_filename}")
+            })
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
-
-
 
 
 # MY ACCOUNT - COMPARE MODELS
@@ -261,9 +272,6 @@ def trackUI():
 @login_required
 def video_processing(modelname):
     return f"Modle path: {modelname}"
-
-
-
 
 
 
