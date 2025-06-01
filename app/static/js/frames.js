@@ -65,3 +65,18 @@ document.querySelectorAll('.video-file').forEach(link => {
 
   });
 });
+
+//seg
+function segmentFrame(folder, frameName) {
+    fetch(`/segment_frame/${folder}/${frameName}`)
+      .then(response => response.json())
+      .then(result => {
+        if (result.success) {
+          const resDiv = document.getElementById('segment-result');
+          resDiv.innerHTML = `<img src="${result.mask_url}" alt="Segmentation mask">`;
+        } else {
+          alert('Error: ' + result.error);
+        }
+      });
+  }
+  

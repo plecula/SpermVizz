@@ -3,3 +3,4 @@
 __pycache__/
 /app/static/uploads
 *.pth
+/app/static/masks
