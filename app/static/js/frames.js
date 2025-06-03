@@ -1,6 +1,7 @@
 let currentFolder = '';
 let framesList = [];
 let currentFrameIndex = 0;
+let selectedModel = null;
 
 function cutCage() {
     const filename = document.getElementById('video-selector').value;
@@ -23,6 +24,20 @@ function cutCage() {
     });
   }
 
+  // choose model
+
+  document.querySelectorAll('.model-btn').forEach(button => {
+    button.addEventListener('click', () => {
+      
+      document.querySelectorAll('.model-btn').forEach(btn => btn.classList.remove('selected'));
+
+      button.classList.add('selected');
+
+      selectedModel = button.getAttribute('data-model');
+
+    })
+  })
+
   //seg
   function segmentFrame(folder, frameName) {
     fetch(`/segment_frame/${folder}/${frameName}`)
@@ -38,10 +53,19 @@ function cutCage() {
   }
 
   function segmentCurrentFrame() {
-    const frameNumber = currentFrameIndex + 1;
-    const frameName = `frame_${frameNumber}.jpg`;
 
-    fetch(`/segment_frame/${currentFolder}/${frameName}`)
+    if(!selectedModel) {
+      alert("At first choose segmentation model!");
+      return;
+    }
+
+    const frameNumber = currentFrameIndex;
+    const frameName = `frame_${frameNumber+ 1}.jpg`;
+
+    console.log(`Segmenting: /segment_frame/${currentFolder}/${frameName}`);
+
+
+    fetch(`/segment_frame/${currentFolder}/${frameName}?model=${encodeURIComponent(selectedModel)}`)
       .then(response => response.json())
       .then(result => {
         if (result.success) {
@@ -69,7 +93,7 @@ function cutCage() {
         
         
         } else {
-          alert('Error: ' + result.error);
+          alert('Error jol: ' + result.error);
         }
       });
   }

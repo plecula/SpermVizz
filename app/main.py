@@ -17,7 +17,7 @@ import numpy as np
 import time
 import torch
 
-#os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True" # for better performance
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True" # for better performance
 
 load_dotenv()
 app = Flask(__name__)
@@ -40,15 +40,52 @@ print(torch.cuda.is_available())
 
 #print(torch.cuda.get_device_name(0))
 # LOAD SEG MODEL
-sam_checkpoint = BASE_DIR / "video_processing" / "models" / "sam_vit_b_01ec64.pth"      # or other one
-model_type = "vit_b"
-sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-sam.to("cuda")   # or cpu!!!  
-mask_generator = SamAutomaticMaskGenerator(
-    sam,
-    pred_iou_thresh= 0.95,
-    points_per_side=32
-)
+# model_name = "sam_vit_b_01ec64.pth"
+# sam_checkpoint = BASE_DIR / "video_processing" / "models" / model_name         #"sam_vit_b_01ec64.pth"      # or other one
+# model_type = 'vit_l' if 'vit_l' in model_name else 'vit_b'
+# sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+# sam.to("cuda")   # or cpu!!!  
+# mask_generator = SamAutomaticMaskGenerator(
+#     sam,
+#     pred_iou_thresh= 0.9,
+#     points_per_side=32
+# )
+
+# LOAD MODELS
+
+loaded_models = {}
+
+def get_mask_generator(model_name):
+    if model_name in loaded_models:
+        return loaded_models[model_name]
+
+    model_type = 'vit_l' if 'vit_l' in model_name else 'vit_b'
+    sam_checkpoint = BASE_DIR / "video_processing" / "models" / model_name
+    sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+    
+    if torch.cuda.is_available() :
+        torch.cuda.empty_cache()
+        device = "cuda"
+    else :
+        device = "cpu"
+
+    try:
+        sam.to("cuda")
+    except torch.cuda.OutOfMemoryError:
+        print("CUDA memory error, switching to CPU")
+        sam.to("cpu")
+        device = "cpu"
+        
+    mask_generator = SamAutomaticMaskGenerator(
+        sam,
+        pred_iou_thresh=0.95,
+        points_per_side=32
+    )
+    mask_generator.model = sam  # reference for fallback
+
+    loaded_models[model_name] = mask_generator
+    return mask_generator
+
 
 # USER MODEL
 class User(db.Model, UserMixin):        # UserMixin for is_active() etc.
@@ -154,7 +191,6 @@ def extract_frames_existing():
     filename = request.form['filename']
     video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
-
     # Name without .mp4 /  .avi
     name_without_ext = os.path.splitext(filename)[0]
 
@@ -197,11 +233,22 @@ def extract_frames_existing():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
+
 # SEGMENTATION FOR FRAMES
+
 @app.route('/segment_frame/<folder>/<frame_name>', methods=['GET'])
 @login_required
 def segment_frame(folder, frame_name):
+    if torch.cuda.is_available() :
+        torch.cuda.empty_cache()
     try:
+        model_name = request.args.get('model')
+        if not model_name:
+            return jsonify({'success': False, 'error': 'No model specified!'})
+    
+        
+        mask_generator = get_mask_generator(model_name)
+
         frame_path = BASE_DIR / "app" / "static" / "uploads" / folder / frame_name
 
         if not frame_path.exists():
@@ -210,9 +257,20 @@ def segment_frame(folder, frame_name):
         start = time.time()
         image = cv2.imread(str(frame_path))
         
+
+        print(f"Processing frame: {frame_path}")
+        print(f"Image shape: {image.shape}")
+
         with torch.no_grad():                   # saves memory
-            masks = mask_generator.generate(image)
-       
+            #masks = mask_generator.generate(image)
+            masks = segment_frame_with_fallback(mask_generator, image)
+
+        print(f"Generated {len(masks)} masks")
+
+
+        if not masks:
+            return jsonify({'success': False, 'error': 'No masks found, maybe try lower pred_iou_thresh'})
+
         masks_sorted = sorted(masks, key=lambda x: x['predicted_iou'], reverse=True)
         best_mask = masks_sorted[0]['segmentation']
         print("Mask generation time:", time.time() - start)
@@ -283,6 +341,26 @@ def logout():
     flash('LOGGED OUT')
     session.pop('username', None)
     return redirect(url_for('home'))
+
+
+def segment_frame_with_fallback(mask_generator, image):
+    try:
+        with torch.no_grad():
+            masks = mask_generator.generate(image)
+    except torch.cuda.OutOfMemoryError:
+        print("OOM during generating — switching to CPU")
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        # switch to cpu
+        mask_generator.model.to("cpu")
+
+        with torch.no_grad():
+            masks = mask_generator.generate(image)
+
+    return masks
+
 
 
 if __name__ == '__main__':
