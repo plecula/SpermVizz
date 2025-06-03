@@ -17,7 +17,7 @@
 {% endwith %}
   
 </head>
-<body>
+<body data-page-type="compare">
  <header>
     <div class="logo" href="index.html">
       <img src="{{ url_for('static', filename='IMG/sperm.png') }}" alt="Logo">
@@ -64,7 +64,10 @@
               <label>My models</label>
               <ul class="myy-models">
                 {% for model in models %}
-                  <li><a href="{{ url_for('video_processing', modelname='models/' ~ model) }}" target="_blank">{{ model }}</a></li>
+                  <li>
+                    <button class="model-btn" data-model="{{ model }}">{{ model }}</button>
+                    <!-- <a href="{{ url_for('video_processing', modelname='models/' ~ model) }}" target="_blank">{{ model }}</a> -->
+                  </li>
                 {% endfor %}
               </ul>
             </div>
