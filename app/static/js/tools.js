@@ -20,6 +20,14 @@ function selectTool(tool) {
 }
 
 const canvas = document.getElementById("canvas");
+//const canvas = document.querySelectorAll('.canvas');
+// if (pageType === 'single') {
+//     const canvas = document.getElementById("canvas");
+// }
+// else if (pageType === 'compare') {
+//     const canvas = document.getElementsByClassName("canvas")[0];
+// }
+
 const context = canvas.getContext("2d");
 
 let isDrawing = false;

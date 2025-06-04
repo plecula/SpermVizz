@@ -94,22 +94,22 @@
           <input type="range" id="frame-slider" min="0" step="1" value="0">
           <p>Current folder: <span id="current-folder-name"></span></p>
           <p>Current frame: <span id="current-frame-name"></span></p>
-          <button onclick="segmentCurrentFrame()">Segment</button>
           <button id="next-frame-btn" onclick="nextFrame()">Next frame</button>
+          <button onclick="segmentCurrentFrame()">Segment</button>
         </div>
         
         <div class="video-right">
           <div class="video-wrapper">
-              <div class="video-tile">Wideo 1  </div>
-              <div class="video-caption">Opis 1</div>
+              <div class="video-tile"></div>
+              <div class="video-caption">Frame: </div>
           </div>
 
           <div class="video-wrapper">
               <div class="video-tile">
-                <canvas id="mask-canvas" width="450" height="350"></canvas>
-                <canvas id="canvas" width="450" height="350"></canvas>                     
+                <canvas id="mask-canvas" width="512" height="512"></canvas>
+                <canvas id="canvas" width="512" height="512"></canvas>                     
               </div>
-              <div class="video-caption">Opis 2</div>
+              <div class="video-caption">Editing frame: </div>
           </div>
         </div>
       </div>
@@ -143,13 +143,15 @@
             <section>
               <label>TOOLS</label>
               <ul class="tools-list">
-                <button onclick="selectTool('eroded-head')"><li class="eroded">eroded head</li></button>
-                <button onclick="selectTool('missing-cell')"><li class="missing">missing sperm cell</li></button>
-                <button onclick="selectTool('short-tail')"><li class="short">short tail</li></button>
-                <button onclick="selectTool('broken-tail')"><li class="broken">broken tail</li></button>
-                <button onclick="selectTool('artifact')"><li class="artifact">artifact</li></button>
-                <button onclick="selectTool('clear-last')"><li class="clear-last">clear last</li></button>
-                <button onclick="selectTool('clear-all')"><li class="clear-all">clear all</li></button>
+                <button onclick="selectTool('eroded-head')"><li class="eroded">Eroded head</li></button>
+                <button onclick="selectTool('missing-cell')"><li class="missing">Missing sperm cell</li></button>
+                <button onclick="selectTool('short-tail')"><li class="short">Short tail</li></button>
+                <button onclick="selectTool('broken-tail')"><li class="broken">Broken tail</li></button>
+                <button onclick="selectTool('artifact')"><li class="artifact">Artifact</li></button>
+                <li></li>
+                <li></li>
+                <button onclick="selectTool('clear-last')"><li class="clear-last">CLEAR LAST</li></button>
+                <button onclick="selectTool('clear-all')"><li class="clear-all">CLEAR ALL</li></button>
                 <div class="rotation-tool">
                   <label for="rotation">Rotate:</label>
                   <input type="range" id="rotationSlider" min="0" max="360" value="0">

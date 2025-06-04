@@ -96,20 +96,23 @@
         <input type="range" id="frame-slider" min="0" step="1" value="0">
         <p>Current folder: <span id="current-folder-name"></span></p>
         <p>Current frame: <span id="current-frame-name"></span></p>
+        <button id="next-frame-btn"  onclick="nextFrame()">Next frame</button>
         <button onclick="segmentCurrentFrame()">Segment</button>
-        <button id="next-frame-btn" onclick="nextFrame()">Next frame</button>
       </div>
       
       <div class="video-right">
         <div class="video-wrapper">
-            <div class="video-tile">Wideo 1  </div>
+            <div class="video-tile">
+              <canvas class="mask-canvas" width="512" height="512"></canvas>
+              <canvas id="canvas1" width="512" height="512"></canvas>   
+            </div>
             <div class="video-caption">Model 1: </div>
         </div>
 
         <div class="video-wrapper">
             <div class="video-tile">
-              <canvas id="mask-canvas" width="450" height="350"></canvas>
-              <canvas id="canvas" width="450" height="350"></canvas>                     
+              <canvas class="mask-canvas" width="512" height="512"></canvas>
+              <canvas id="canvas2" width="512" height="512"></canvas>                     
             </div>
             <div class="video-caption">Model 2:</div>
         </div>
@@ -142,23 +145,30 @@
       </div>
 
       <div class="sidebar-tools"> 
-          <section>
-            <label>TOOLS</label>
-            <ul class="tools-list">
-              <button onclick="selectTool('eroded-head')"><li class="eroded">eroded head</li></button>
-              <button onclick="selectTool('missing-cell')"><li class="missing">missing sperm cell</li></button>
-              <button onclick="selectTool('short-tail')"><li class="short">short tail</li></button>
-              <button onclick="selectTool('broken-tail')"><li class="broken">broken tail</li></button>
-              <button onclick="selectTool('artifact')"><li class="artifact">artifact</li></button>
-              <button onclick="selectTool('clear-last')"><li class="clear-last">clear last</li></button>
-              <button onclick="selectTool('clear-all')"><li class="clear-all">clear all</li></button>
-              <div class="rotation-tool">
-                <label for="rotation">Rotate:</label>
-                <input type="range" id="rotationSlider" min="0" max="360" value="0">
-              </div>
-            </ul>
+        <section>
+          <label>TOOLS</label>
+          <section class="which-frame-btns">
+            <button class="which-frame-btn" data-canvas="canvas1">Model 1</button>
+            <button class="which-frame-btn" data-canvas="canvas2">Model 2</button>
           </section>
+          <ul class="tools-list">
+            <button onclick="selectTool('eroded-head')"><span class="eroded">Eroded head</span></button>
+            <button onclick="selectTool('missing-cell')"><span class="missing">Missing sperm cell</span></button>
+            <button onclick="selectTool('short-tail')"><span class="short">Short tail</span></button>
+            <button onclick="selectTool('broken-tail')"><span class="broken">Broken tail</span></button>
+            <button onclick="selectTool('artifact')"><span class="artifact">Artifact</span></button>
+            <li></li>
+            <li></li>
+            <button onclick="selectTool('clear-last')"><span class="clear-last">CLEAR LAST</span></button>
+            <button onclick="selectTool('clear-all')"><span class="clear-all">CLEAR ALL</span></button>
+          </ul>
+          <div class="rotation-tool">
+            <label for="rotation">Rotate:</label>
+            <input type="range" id="rotationSlider" min="0" max="360" value="0">
+          </div>
+        </section>
       </div>
+      
     </div>
 
   </div>
@@ -167,7 +177,7 @@
 <label>charts and analysis here!</label>
 </div>
 
-  <script src="{{ url_for('static', filename='js/tools.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/toolsCompare.js') }}"></script>
   <script src="{{ url_for('static', filename='js/frames.js') }}"></script>
 
 

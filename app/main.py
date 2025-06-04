@@ -38,18 +38,6 @@ login_manager.login_view = 'login'      # if not registered, go to login page
 
 print(torch.cuda.is_available())
 
-#print(torch.cuda.get_device_name(0))
-# LOAD SEG MODEL
-# model_name = "sam_vit_b_01ec64.pth"
-# sam_checkpoint = BASE_DIR / "video_processing" / "models" / model_name         #"sam_vit_b_01ec64.pth"      # or other one
-# model_type = 'vit_l' if 'vit_l' in model_name else 'vit_b'
-# sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-# sam.to("cuda")   # or cpu!!!  
-# mask_generator = SamAutomaticMaskGenerator(
-#     sam,
-#     pred_iou_thresh= 0.9,
-#     points_per_side=32
-# )
 
 # LOAD MODELS
 
@@ -63,18 +51,7 @@ def get_mask_generator(model_name):
     sam_checkpoint = BASE_DIR / "video_processing" / "models" / model_name
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
     
-    if torch.cuda.is_available() :
-        torch.cuda.empty_cache()
-        device = "cuda"
-    else :
-        device = "cpu"
-
-    try:
-        sam.to("cuda")
-    except torch.cuda.OutOfMemoryError:
-        print("CUDA memory error, switching to CPU")
-        sam.to("cpu")
-        device = "cpu"
+    sam.to("cpu")
         
     mask_generator = SamAutomaticMaskGenerator(
         sam,
@@ -85,6 +62,39 @@ def get_mask_generator(model_name):
 
     loaded_models[model_name] = mask_generator
     return mask_generator
+
+
+def segment_frame_with_fallback(mask_generator, image):
+   
+    sam_model = mask_generator.model
+
+    try:
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            sam_model.to("cuda")
+        else:
+            sam_model.to("cpu")
+
+        with torch.no_grad():
+            masks = mask_generator.generate(image)
+
+    except torch.cuda.OutOfMemoryError:
+        print("OOM during generating — switching to CPU")
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        sam_model.to("cpu")
+
+        with torch.no_grad():
+            masks = mask_generator.generate(image)
+
+    finally:
+        sam_model.to("cpu")
+        torch.cuda.empty_cache()
+
+    return masks
+
 
 
 # USER MODEL
@@ -341,26 +351,6 @@ def logout():
     flash('LOGGED OUT')
     session.pop('username', None)
     return redirect(url_for('home'))
-
-
-def segment_frame_with_fallback(mask_generator, image):
-    try:
-        with torch.no_grad():
-            masks = mask_generator.generate(image)
-    except torch.cuda.OutOfMemoryError:
-        print("OOM during generating — switching to CPU")
-
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
-        # switch to cpu
-        mask_generator.model.to("cpu")
-
-        with torch.no_grad():
-            masks = mask_generator.generate(image)
-
-    return masks
-
 
 
 if __name__ == '__main__':
