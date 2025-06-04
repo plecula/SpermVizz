@@ -1,6 +1,6 @@
 # tu backend Flask (lub potem FastAPI)
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt     # for password protection
 from flask_login import LoginManager, login_user, login_required, logout_user, UserMixin
@@ -12,8 +12,16 @@ from pathlib import Path
 import cv2
 import uuid  # do tworzenia unikalnych folderów
 from flask import jsonify
+from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
+import numpy as np
+import time
+import torch
+import glob
+import shutil
+import json
 
 
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True" # for better performance
 
 load_dotenv()
 app = Flask(__name__)
@@ -31,6 +39,45 @@ db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'      # if not registered, go to login page
+
+print(torch.cuda.is_available())
+
+#print(torch.cuda.get_device_name(0))
+# LOAD SEG MODEL
+# model_name = "sam_vit_b_01ec64.pth"
+# sam_checkpoint = BASE_DIR / "video_processing" / "models" / model_name         #"sam_vit_b_01ec64.pth"      # or other one
+# model_type = 'vit_l' if 'vit_l' in model_name else 'vit_b'
+# sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+# sam.to("cuda")   # or cpu!!!  
+# mask_generator = SamAutomaticMaskGenerator(
+#     sam,
+#     pred_iou_thresh= 0.9,
+#     points_per_side=32
+# )
+
+# LOAD MODELS
+
+loaded_models = {}
+
+def get_mask_generator(model_name):
+    if model_name in loaded_models:
+        return loaded_models[model_name]
+
+    model_type = 'vit_l' if 'vit_l' in model_name else 'vit_b'
+    sam_checkpoint = BASE_DIR / "video_processing" / "models" / model_name
+    sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+    
+    sam.to("cpu")
+        
+    mask_generator = SamAutomaticMaskGenerator(
+        sam,
+        pred_iou_thresh=0.95,
+        points_per_side=32
+    )
+    mask_generator.model = sam  # reference for fallback
+
+    loaded_models[model_name] = mask_generator
+    return mask_generator
 
 
 # USER MODEL
@@ -128,25 +175,33 @@ def interface():
     files = os.listdir(upload_folder)
     files = [f for f in files if os.path.isfile(os.path.join(upload_folder, f))]
 
-    return render_template('segmentacja.html',models=models, files=files)
+     # Szukamy ostatniej maski
+    masks_dir = os.path.join("static", "masks")
+    last_mask = None
+    mask_files = glob.glob(os.path.join(masks_dir, "*.jpg"))
+    if mask_files:
+        latest_mask_path = max(mask_files, key=os.path.getmtime)
+        last_mask = os.path.basename(latest_mask_path)
+    return render_template('segmentacja.html', models=models, files=files, last_mask=last_mask)
 
-
-
-
+# EXTRACTING FRAMES FROM VIDEO
 @app.route('/extract_frames_existing', methods=['POST'])
 @login_required
 def extract_frames_existing():
     filename = request.form['filename']
     video_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
+    # Name without .mp4 /  .avi
+    name_without_ext = os.path.splitext(filename)[0]
+
     try:
-        # Stwórz nowy folder
-        unique_folder = str(uuid.uuid4())
+        # Create new folder
+        unique_folder = f"f_{name_without_ext}_{uuid.uuid4().hex[:3]}"
         frames_dir = os.path.join(app.config['UPLOAD_FOLDER'], unique_folder)
         os.makedirs(frames_dir, exist_ok=True)
 
-        # Klatkowanie (OpenCV)
-        interval = 1  # co 1 sekundę
+        # Frames (OpenCV)
+        interval = 1  # 1 sec
         cap = cv2.VideoCapture(video_path)
         fps = cap.get(cv2.CAP_PROP_FPS)
         frame_count = 0
@@ -170,10 +225,136 @@ def extract_frames_existing():
 
         cap.release()
 
-        return jsonify({'success': True, 'frames': frames_urls})
+        return jsonify({
+            'success': True, 
+            'frames': frames_urls,
+            'folder': unique_folder
+            })
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
+
+# SEGMENTATION FOR FRAMES
+
+@app.route('/segment_frame/<folder>/<frame_name>', methods=['GET'])
+@login_required
+def segment_frame(folder, frame_name):
+    if torch.cuda.is_available() :
+        torch.cuda.empty_cache()
+    try:
+        model_name = request.args.get('model')
+        if not model_name:
+            return jsonify({'success': False, 'error': 'No model specified!'})
+    
+        
+        mask_generator = get_mask_generator(model_name)
+
+        frame_path = BASE_DIR / "app" / "static" / "uploads" / folder / frame_name
+
+        if not frame_path.exists():
+            return jsonify({'success': False, 'error': 'Frame not found'})
+ 
+        start = time.time()
+        image = cv2.imread(str(frame_path))
+        
+
+        print(f"Processing frame: {frame_path}")
+        print(f"Image shape: {image.shape}")
+
+        with torch.no_grad():                   # saves memory
+            #masks = mask_generator.generate(image)
+            masks = segment_frame_with_fallback(mask_generator, image)
+
+        print(f"Generated {len(masks)} masks")
+
+
+        if not masks:
+            return jsonify({'success': False, 'error': 'No masks found, maybe try lower pred_iou_thresh'})
+
+        masks_sorted = sorted(masks, key=lambda x: x['predicted_iou'], reverse=True)
+        best_mask = masks_sorted[0]['segmentation']
+        print("Mask generation time:", time.time() - start)
+        
+        # Save mask
+        name_wo_ext = os.path.splitext(frame_name)[0]           # np. "frame_1"
+        folder_suffix = folder.split('_')[-1]                   # np. "abc"
+        mask_filename = f"{name_wo_ext}_{folder_suffix}.jpg"    # np. "frame_1_abc.png"
+        mask_path = BASE_DIR / "app" / "static" / "masks" / mask_filename
+
+        os.makedirs(mask_path.parent, exist_ok=True)
+
+        mask_image = (1 - best_mask) * 255
+        cv2.imwrite(str(mask_path), mask_image.astype(np.uint8))
+
+        session['last_mask'] = mask_filename  # zapamiętaj maskę do eksportu
+
+        print("Maska zapisana jako:", mask_filename)
+
+        return jsonify({
+            'success': True, 
+            'mask_url': url_for('static', filename=f"masks/{mask_filename}")
+            })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
+
+
+
+#EXPORT TO PNG, JSON    
+@app.route("/export/png")
+@login_required
+def export_png():
+    filename = request.args.get("filename")
+
+    if not filename:
+        return "Brak pliku do eksportu!", 400
+
+    masks_dir = os.path.join("static", "masks")
+    downloads_dir = os.path.join("static", "downloads")
+    os.makedirs(downloads_dir, exist_ok=True)
+
+    mask_path = os.path.join(masks_dir, filename)
+    destination = os.path.join(downloads_dir, filename.replace(".jpg", ".png"))
+
+    if not os.path.exists(mask_path):
+        return f"Plik nie istnieje: {mask_path}", 404
+
+    shutil.copyfile(mask_path, destination)
+
+    return send_from_directory(directory=downloads_dir, path=os.path.basename(destination), as_attachment=True)
+
+
+@app.route('/export/json')
+@login_required
+def export_json():
+    filename = request.args.get('filename')
+    if not filename:
+        return "No filename provided", 400
+
+    data = {"filename": filename, "info": "sample metadata"}  # przyklad jsona - do modyfikacji
+
+   # json_data = {
+    #    "filename": frame_name,
+     #   "mask_filename": mask_filename,
+      #  "model_used": model_name,
+       # "image_size": list(image.shape[:2]),
+        #"num_masks": len(masks),
+       # "predicted_iou": float(masks_sorted[0]['predicted_iou']),
+       # "bounding_box": list(masks_sorted[0]['bbox']),
+       # "generated_at": datetime.now().isoformat()
+   # }
+
+    download_path = os.path.join("static", "downloads")
+    os.makedirs(download_path, exist_ok=True)
+
+    json_filename = filename.replace('.jpg', '.json')
+    json_path = os.path.join(download_path, json_filename)
+
+    with open(json_path, 'w') as f:
+        json.dump(data, f)
+
+    return send_from_directory(directory=download_path, path=json_filename, as_attachment=True)
 
 
 
@@ -218,9 +399,6 @@ def video_processing(modelname):
 
 
 
-
-
-
 # LOGOUT
 @app.route('/logout', methods=['POST'])
 @login_required
@@ -231,8 +409,29 @@ def logout():
     return redirect(url_for('home'))
 
 
+def segment_frame_with_fallback(mask_generator, image):
+    try:
+        with torch.no_grad():
+            masks = mask_generator.generate(image)
+    except torch.cuda.OutOfMemoryError:
+        print("OOM during generating — switching to CPU")
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        # switch to cpu
+        mask_generator.model.to("cpu")
+
+        with torch.no_grad():
+            masks = mask_generator.generate(image)
+            
+
+    return masks
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
 
 # with app.app_context():
-#      db.create_all()  # tworzy tabele w bazie
+#      db.create_all()  # tworzy tabele w bazie 

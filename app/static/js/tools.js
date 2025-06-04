@@ -3,6 +3,20 @@ let annotations = [];
 
 function selectTool(tool) {
     currentTool = tool;
+
+    if (currentTool == 'clear-last') {
+        annotations.pop();        
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        redrawAnnotations();
+        currentTool = null;
+    }
+    else if (currentTool == 'clear-all') {
+        annotations.length = 0;
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        redrawAnnotations();
+        currentTool = null;
+    }
+
 }
 
 const canvas = document.getElementById("canvas");
@@ -18,7 +32,6 @@ canvas.addEventListener("mousedown", (e) => {
     startX = e.clientX - rect.left;
     startY = e.clientY - rect.top;
     isDrawing = true;
-  
 });
 
 canvas.addEventListener("mousemove", (e) => {
@@ -68,8 +81,8 @@ canvas.addEventListener("mouseup", (e) => {
     startX: startX,
     startY: startY,
     endX: endX,
-    endY: endY
-
+    endY: endY,
+    rotation: 0
   });
 
   // clear canvas, redrawing submited annotations
@@ -78,44 +91,61 @@ canvas.addEventListener("mouseup", (e) => {
   currentTool = null;
 });
 
+
+document.getElementById("rotationSlider").addEventListener("input", (e) => {
+    const angle = parseInt(e.target.value);
+    if (annotations.length > 0) {
+      annotations[annotations.length - 1].rotation = angle * Math.PI / 180;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      redrawAnnotations();
+    }
+  });
+
 function redrawAnnotations() {
     annotations.forEach((ann) => {
 
         switch (ann.type) {
-            case 'artifact' :
+            case 'artifact' :           
+                context.save();
+                context.translate(ann.x, ann.y);
+                context.rotate(ann.rotation);
                 context.beginPath();
-                context.ellipse(ann.x, ann.y, ann.width, ann.height, 0, 0, Math.PI * 2);
+                context.ellipse(0, 0, ann.width, ann.height, 0, 0, Math.PI * 2);
                 context.strokeStyle = "purple";
                 context.lineWidth = 2;
                 context.stroke();
                 context.closePath();
+                context.restore();
                 break;
             case 'eroded-head':
                 drawArrow(ann.startX, ann.startY, ann.x, ann.y, "green");
                 break;
             case 'missing-cell':
+                context.save();
+                context.translate(ann.x, ann.y);    // transfer rotation point(0,0) to rect center
+                context.rotate(ann.rotation);
                 context.beginPath();
-                context.rect(ann.x, ann.y, ann.width, ann.height)
+                context.rect(-ann.width, -ann.height, ann.width * 2, ann.height * 2);
                 context.strokeStyle = "yellow";
                 context.lineWidth = 2;
                 context.stroke();
                 context.closePath();
+                context.restore();
                 break;
             case 'short-tail':
+                context.save();
+                context.translate(ann.x, ann.y);
+                context.rotate(ann.rotation);
                 context.beginPath();
-                context.ellipse(ann.x, ann.y, ann.width, ann.height, 0, 0, Math.PI * 2);
+                context.ellipse(0, 0, ann.width, ann.height, 0, 0, Math.PI * 2);
                 context.strokeStyle = "blue";
                 context.lineWidth = 2;
                 context.stroke();
                 context.closePath();
+                context.restore();
                 break;
             case 'broken-tail':
-                context.beginPath();
-                context.ellipse(ann.x, ann.y, ann.width, ann.height, 0, 0, Math.PI * 2);
-                context.strokeStyle = "red";
-                context.lineWidth = 2;
-                context.stroke();
-                context.closePath();
+                drawArrow(ann.startX, ann.startY, ann.x, ann.y, "red");
                 break;
         }
       
@@ -144,7 +174,7 @@ function redrawAnnotations() {
 
         case 'missing-cell':
             context.beginPath();
-            context.rect(x, y, width, height)
+            context.rect(startX, startY, (x - startX) *2 , (y - startY) * 2);
             context.strokeStyle = "yellow";
             context.lineWidth = 2;
             context.stroke();
@@ -159,13 +189,9 @@ function redrawAnnotations() {
             context.closePath();
             break;
         case 'broken-tail':
-            context.beginPath();
-            context.ellipse(x, y, width, height, 0, 0, Math.PI * 2);
-            context.strokeStyle = "red";
-            context.lineWidth = 2;
-            context.stroke();
-            context.closePath();
+            drawArrow(startX, startY, x, y, "red");
             break;
+
     }
 
   }

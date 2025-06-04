@@ -1,264 +1,186 @@
 <!DOCTYPE html>
 <html lang="pl">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SpermVizz</title>
-  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style3.css') }}">
-  {% with messages = get_flashed_messages() %}
-  {% if messages %}
-    <ul class="flash-messages">
-      {% for message in messages %}
-        <li>{{ message }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
-  
-</head>
-<body>
- <header>
-    <div class="logo" href="index.html">
-      <img src="{{ url_for('static', filename='IMG/sperm.png') }}" alt="Logo">
-      <span>Sperm<span class="blue">Vizz</span></span>
-    </div>
-    <svg id="menuIcon" class="menu-icon" onclick="toggleMenu()" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <line x1="3" y1="12" x2="21" y2="12"/>
-      <line x1="3" y1="6" x2="21" y2="6"/>
-      <line x1="3" y1="18" x2="21" y2="18"/>
-    </svg>
-  </header>
-
-
-<div class="menu-overlay" id="menu">
-    <div class="menu-content">
-      <div class="menu-close" onclick="toggleMenu()">&times;</div>
-      <a href="index.html">STRONA GŁÓWNA</a>
-     
-      {% if 'username' in session %}  
-        <a>     
-          <form id="logout-button-form" action="{{ url_for('logout') }}" method="POST">
-            <button id="logout-button" type="submit" href="{{url_for('logout') }}">
-              WYLOGUJ
-            </button>         
-          </form>  
-        </a>   
-        <a href="wideo.html">DODAJ WIDEO</a>
-      {% else %}
-        <a href="register.html">ZAREJESTRUJ</a>
-        <a href="logowanie.html">ZALOGUJ</a>
-      {% endif %}        
-      
-      <a href="#">AUTORZY</a>
-    </div>
-  </div>
-
-  <div class="container">
-    <div class="sidebar">
-      <section>
-        <!-- <div><strong>Model:</strong></div>
-        <div>- model1</div>
-        <div>- model2</div> -->
-<!-- mojje proby xd -->
-        <div class="my-models">
-          <label>My models</label>
-          <ul class="myy-models">
-            {% for model in models %}
-              <li><a href="{{ url_for('video_processing', modelname='models/' ~ model) }}" target="_blank">{{ model }}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
-
-      </section>
-
-      
-
-  <section>
-  <div class="my-files">
-    <label>My files</label>
-    <ul class="myy-files">
-      {% for file in files %}
-        <li>
-          <a href="#" class="video-file" data-filename="{{ file }}">{{ file }}</a>
-        </li>
-      {% endfor %}
-    </ul>
-  </div>
-</section>
-
-
-</div>
-
-  <div class="video-list">
-     <div id="frame-container"></div>
-  <input type="range" id="frame-slider" min="0" step="1" value="0">
-</div>
-    <div class="main-content">
-        <div class="video-wrapper">
-        <div class="video-tile">Wideo 1</div>
-        <div class="video-caption">Opis 1</div>
-      </div>
-      <div class="video-wrapper">
-        <div class="video-tile">Wideo 2  </div>
-        <div class="video-caption">Opis 2</div>
-      </div>
-      <div class="video-wrapper">
-        <div class="video-tile">Wideo 3</div>
-        <div class="video-caption">Opis 3</div>
-      </div>
-      <div class="video-wrapper">
-        <div class="video-tile">
-          <canvas id="canvas" width="450" height="350"></canvas>
-        </div>
-        <div class="video-caption">Opis 4</div>
-     
-    </div>
-
-   </div>
-
-  <div class="sidebars-wrapper">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SpermVizz</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style3.css') }}">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <ul class="flash-messages">
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
     
-    <div class="sidebar-right">
-      <section>
-        
+  </head> 
+  <body data-page-type="single">
+    <header>
+        <div class="logo" href="index.html">
+          <img src="{{ url_for('static', filename='IMG/sperm.png') }}" alt="Logo">
+          <span>Sperm<span class="blue">Vizz</span></span>
+            <p class="view-text">Check quality</p> 
+        </div>
+        <svg id="menuIcon" class="menu-icon" onclick="toggleMenu()" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+    </header>
 
-        <div class="views">
-          <label>VIEW OPTIONS</label>
-          <ul class="view-switch">
-            <li><a href="{{ url_for('interface') }}">Check quality</a></li>
-            <li><a href="{{ url_for('compareUI') }}">Compare models</a></li>
-            <li><a href="{{ url_for('trackUI') }}">Sperm cell track</a></li>
-          </ul>
+
+    <div class="menu-overlay" id="menu">
+        <div class="menu-content">
+          <div class="menu-close" onclick="toggleMenu()">&times;</div>
+          <a href="index.html">STRONA GŁÓWNA</a>
+        
+          {% if 'username' in session %}  
+            <a>     
+              <form id="logout-button-form" action="{{ url_for('logout') }}" method="POST">
+                <button id="logout-button" type="submit" href="{{url_for('logout') }}">
+                  WYLOGUJ
+                </button>         
+              </form>  
+            </a>   
+            <a href="wideo.html">DODAJ WIDEO</a>
+          {% else %}
+            <a href="register.html">ZAREJESTRUJ</a>
+            <a href="logowanie.html">ZALOGUJ</a>
+          {% endif %}        
+          
+          <a href="#">AUTORZY</a>
+        </div>
+    </div>
+
+    <div class="container">
+      <div class="sidebar">
+            <section>
+              <div class="my-models">
+                <label>My models</label>
+                <ul class="myy-models">
+                  {% for model in models %}
+                    <li>
+                      <button class="model-btn" data-model="{{ model }}">{{ model }}</button>
+                      <!-- <a href="{{ url_for('video_processing', modelname='models/' ~ model) }}" target="_blank">{{ model }}</a> -->
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+
+            </section>
+
+            <section>
+            <div class="my-files">
+              <label>My files</label>
+              <ul class="myy-files">
+                {% for file in files %}
+                  <li>
+                    <a href="#" class="video-file" data-filename="{{ file }}">{{ file }}</a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+          </section>
+      </div>
+      
+    
+      <div class="main-content">
+
+        <div class="video-list">
+          <div id="frame-container"></div>
+          <input type="range" id="frame-slider" min="0" step="1" value="0">
+          <p>Current folder: <span id="current-folder-name"></span></p>
+          <p>Current frame: <span id="current-frame-name"></span></p>
+          <button onclick="segmentCurrentFrame()">Segment</button>
+          <button id="next-frame-btn" onclick="nextFrame()">Next frame</button>
+        </div>
+        
+        <div class="video-right">
+          <div class="video-wrapper">
+              <div class="video-tile">Wideo 1  </div>
+              <div class="video-caption">Opis 1</div>
+          </div>
+
+          <div class="video-wrapper">
+              <div class="video-tile">
+                <canvas id="mask-canvas" width="450" height="350"></canvas>
+                <canvas id="canvas" width="450" height="350"></canvas>                     
+              </div>
+              <div class="video-caption">Opis 2</div>
+          </div>
+        </div>
+      </div>
+    
+
+    <div class="sidebars-wrapper">
+      
+        <div class="sidebar-right">
+            <section>
+              <div class="views">
+                <label>VIEW OPTIONS</label>
+                <ul class="view-switch">
+                  <li><a href="{{ url_for('interface') }}">Check quality</a></li>
+                  <li><a href="{{ url_for('compareUI') }}">Compare models</a></li>
+                  <li><a href="{{ url_for('trackUI') }}">Sperm cell track</a></li>
+                </ul>
+              </div>
+
+            </section>
+
+            <section>
+              <label>EXPORT TO</label>
+              <ul class="export">
+                <li><a href="{{ url_for('export_png') }}?filename={{ last_mask }}">PNG</a></li>
+                <li><a href="{{ url_for('export_json') }}?filename={{ last_mask }}">JSON</a></li>
+              </ul>
+            </section>
         </div>
 
-      </section>
+        <div class="sidebar-tools"> 
+            <section>
+              <label>TOOLS</label>
+              <ul class="tools-list">
+                <button onclick="selectTool('eroded-head')"><li class="eroded">eroded head</li></button>
+                <button onclick="selectTool('missing-cell')"><li class="missing">missing sperm cell</li></button>
+                <button onclick="selectTool('short-tail')"><li class="short">short tail</li></button>
+                <button onclick="selectTool('broken-tail')"><li class="broken">broken tail</li></button>
+                <button onclick="selectTool('artifact')"><li class="artifact">artifact</li></button>
+                <button onclick="selectTool('clear-last')"><li class="clear-last">clear last</li></button>
+                <button onclick="selectTool('clear-all')"><li class="clear-all">clear all</li></button>
+                <div class="rotation-tool">
+                  <label for="rotation">Rotate:</label>
+                  <input type="range" id="rotationSlider" min="0" max="360" value="0">
+                </div>
+              </ul>
+            </section>
+        </div>
+      </div>
 
-      <section>
-        <label>EXPORT TO</label>
-        <ul class="export">
-          <li><a href="{{ url_for('interface') }}">PNG</a></li>
-          <li><a href="{{ url_for('interface') }}">JSON</a></li>         
-        </ul>
-      </section>
     </div>
 
-
-   <div class="sidebar-tools">
-      <section>
-        <label>TOOLS</label>
-        <ul class="tools-list">
-          <button onclick="selectTool('eroded-head')"><li class="eroded">eroded head</li></button>
-          <button onclick="selectTool('missing-cell')"><li class="missing">missing sperm cell</li></button>
-          <button onclick="selectTool('short-tail')"><li class="short">short tail</li></button>
-          <button onclick="selectTool('broken-tail')"><li class="broken">broken tail</li></button>
-          <button onclick="selectTool('artifact')"><li class="artifact">artifact</li></button>
-          <button onclick="selectTool('clear-last')"><li class="clear-last">clear last</li></button>
-          <button onclick="selectTool('clear-all')"><li class="clear-all">clear all</li></button>
-          <div class="rotation-tool">
-            <label for="rotation">Rotate:</label>
-            <input type="range" id="rotationSlider" min="0" max="360" value="0">
-
-          </div>
-        </ul>
-      </section>
-    </div>
-
+  <div class="charts-container">
+  <label>charts and analysis here!</label>
   </div>
 
+    <script src="{{ url_for('static', filename='js/tools.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/frames.js') }}"></script>
 
-
-
- <!--<div class="charts-container">
-<label>charts and analysis here!</label>
-</div>
--->
- <script src="{{ url_for('static', filename='js/tools.js') }}"></script>
-
-  <script>
-    function toggleMenu() {
-      const menu = document.getElementById('menu');
-      const icon = document.getElementById('menuIcon');
-      if (menu.classList.contains('active')) {
-        menu.classList.remove('active');
-        icon.style.display = 'block';
-      } else {
-        menu.classList.add('active');
-        icon.style.display = 'none';
+    <script>
+      function toggleMenu() {
+        const menu = document.getElementById('menu');
+        const icon = document.getElementById('menuIcon');
+        if (menu.classList.contains('active')) {
+          menu.classList.remove('active');
+          icon.style.display = 'block';
+        } else {
+          menu.classList.add('active');
+          icon.style.display = 'none';
+        }
       }
+    </script>
 
-    }
-  </script>
-
-<script>
-function cutCage() {
-  const filename = document.getElementById('video-selector').value;
-  const start = document.getElementById('start-time').value;
-  const end = document.getElementById('end-time').value;
-
-  fetch('/cut_cage', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-    body: `filename=${encodeURIComponent(filename)}&start=${start}&end=${end}`
-  })
-  .then(res => res.json())
-  .then(data => {
-    const resDiv = document.getElementById('cut-result');
-    if (data.success) {
-      resDiv.innerHTML = `<p>Fragment zapisany: <a href="${data.output}" target="_blank">Zobacz</a></p>`;
-    } else {
-      resDiv.innerHTML = `<p>Błąd: ${data.error}</p>`;
-    }
-  });
-}
-</script>
-
-  <script> //skrypt do segmentacji
-document.querySelectorAll('.video-file').forEach(link => {
-  link.addEventListener('click', async function(e) {
-    e.preventDefault();
-    const filename = this.getAttribute('data-filename');
-
-    const formData = new FormData();
-    formData.append('filename', filename);
-
-    // Wysyłamy żądanie do backendu
-    const response = await fetch('/extract_frames_existing', {  // endpoint do obsługi istniejącego pliku
-      method: 'POST',
-      body: formData
-    });
-    const result = await response.json();
-
-   if (result.success) {
-  const frameContainer = document.getElementById('frame-container');
-  frameContainer.innerHTML = '';
-
-  result.frames.forEach((frameUrl, idx) => {
-    const img = document.createElement('img');
-    img.src = frameUrl;
-
-    // Ukrywamy wszystkie, oprócz pierwszej klatki
-    img.style.display = idx === 0 ? 'block' : 'none';
-    frameContainer.appendChild(img);
-  });
-
-  const slider = document.getElementById('frame-slider');
-  slider.max = result.frames.length - 1;
-  slider.value = 0; // Ustaw suwak na start
-   slider.style.display = 'block'; 
-
-  // Obsługa suwaka
-  slider.oninput = function() {
-    const images = frameContainer.querySelectorAll('img');
-    images.forEach(img => img.style.display = 'none'); // Ukryj wszystkie
-    images[this.value].style.display = 'block';        // Pokaż tylko wybraną
-  };
-}
-
-  });
-});
-</script>
-
-
-</body>
+  </body>
 </html>
