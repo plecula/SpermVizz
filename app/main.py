@@ -147,7 +147,16 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        password1 = request.form['password1']  
+
+        if password != password1:
+            flash('Passwords must be the same!')
+            return redirect(url_for('register'))
+        
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+        # CHECKING SAME PASSWORD
+
 
         # CHECK IF USER EXISTS
         existing_user = User.query.filter_by(username=username).first()

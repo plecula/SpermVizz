@@ -34,6 +34,13 @@
       <div class="menu-close" onclick="toggleMenu()">&times;</div>
       <a href="index.html">STRONA GŁÓWNA</a>
      
+      <a href="segmentacja.html">MOJE KONTO</a>
+
+      <a href="wideo.html">DODAJ WIDEO</a>
+
+       <a href="compare.html">PORÓWNAJ MODELE</a>
+
+
       {% if 'username' in session %}  
         <a>     
           <form id="logout-button-form" action="{{ url_for('logout') }}" method="POST">
@@ -42,7 +49,7 @@
             </button>         
           </form>  
         </a>   
-        <a href="segmentacja.html">MOJE KONTO</a>
+        
         <!-- <form id="logout-button-form" action="{{ url_for('logout') }}" method="POST"></form>
             <button id="logout-button" type="submit" href="{{url_for('logout') }}"> WYLOGUJ </button>         
         </form>   -->
@@ -52,21 +59,36 @@
         <a href="register.html">ZAREJESTRUJ</a>
         <a href="logowanie.html">ZALOGUJ</a>
       {% endif %}        
+       
+    
+
+
       
-      <a href="#">AUTORZY</a>
     </div>
   </div>
 
   <main class="main-box main-flex">
     <div class="main-text">
-      Interaktywna strona internetowa do wizualizacji problemu segmentacji plemników w sekwencji wideo - segmentacja poprzez części. Wideo ISCI.
+      <strong>Witamy w Projekcie SpermVizz</strong>
+     
     </div>
     <div class="main-buttons">
-      <a href="wideo.html" class="button add-video">DODAJ WIDEO</a>
+      <a href="register.html" class="button add-video">ZAREJESTRUJ SIĘ</a>
       <a href="logowanie.html" class="button login">ZALOGUJ SIĘ</a>
     </div>
   </main>
+
   
+  <section class="project-description">
+    <div class="description-content">
+     
+        <p>
+            SpermVizz to platforma do analizy i segmentacji obrazów komórek plemnikowych z segmentacji poprzez części z wideo ISCI, 
+            wykorzystująca modele, do precyzyjnego wykrywania cech komórek.
+            Dzięki tej aplikacji możesz przeprowadzić segmentację obrazów i analizować wyniki przy użyciu różnych modeli.
+        </p>
+    </div>
+</section>
 
   <footer>
     {% if 'username' in session %}

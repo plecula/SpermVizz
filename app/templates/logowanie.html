@@ -32,7 +32,13 @@
       <div class="menu-overlay" id="menu">
         <div class="menu-content">
           <div class="menu-close" onclick="toggleMenu()">&times;</div>
-          <a href="index.html">STRONA GŁÓWNA</a>
+        <a href="index.html">STRONA GŁÓWNA</a>
+     
+      <a href="segmentacja.html">MOJE KONTO</a>
+
+      <a href="wideo.html">DODAJ WIDEO</a>
+
+       <a href="compare.html">PORÓWNAJ MODELE</a>
          
           {% if 'username' in session %}  
             <a>     
@@ -42,13 +48,12 @@
                 </button>         
               </form>  
             </a>   
-            <a href="wideo.html">MOJE KONTO</a>
+         
           {% else %}
             <a href="register.html">ZAREJESTRUJ</a>
             <a href="logowanie.html">ZALOGUJ</a>
           {% endif %}        
-          
-          <a href="#">AUTORZY</a>
+        
         </div>
       </div>
 
