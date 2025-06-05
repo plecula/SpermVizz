@@ -3,3 +3,5 @@
 __pycache__/
 /app/static/uploads
 *.pth
+/app/static/masks
+/video_processing/masksTracking

@@ -17,12 +17,14 @@
 {% endwith %}
   
 </head>
-<body>
+<body data-page-type="compare">
  <header>
     <div class="logo" href="index.html">
       <img src="{{ url_for('static', filename='IMG/sperm.png') }}" alt="Logo">
       <span>Sperm<span class="blue">Vizz</span></span>
+
       <p class="view-text">Compare models</p> 
+
     </div>
     <svg id="menuIcon" class="menu-icon" onclick="toggleMenu()" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="3" y1="12" x2="21" y2="12"/>
@@ -51,109 +53,133 @@
         <a href="logowanie.html">ZALOGUJ</a>
       {% endif %}        
       
-      <a href="#">AUTORZY</a>
+      <a href="https://github.com/w3ron1ka/SpermVizz" target="_blank">AUTORZY</a>
     </div>
   </div>
 
   <div class="container">
     <div class="sidebar">
-      <section>
-        <!-- <div><strong>Model:</strong></div>
-        <div>- model1</div>
-        <div>- model2</div> -->
-<!-- mojje proby xd -->
-        <div class="my-models">
-          <label>My models</label>
-          <ul class="myy-models">
-            {% for model in models %}
-              <li><a href="{{ url_for('video_processing', modelname='models/' ~ model) }}" target="_blank">{{ model }}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
+          <section>
+            <div class="my-models">
+              <label>My models</label>
+              <ul class="myy-models">
+                {% for model in models %}
+                  <li>
+                    <button class="model-btn" data-model="{{ model }}">{{ model }}</button>
+                    <!-- <a href="{{ url_for('video_processing', modelname='models/' ~ model) }}" target="_blank">{{ model }}</a> -->
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
 
-      </section>
+          </section>
 
-      
-
-      <section>
-        <div class="my-files">
-          <label>My files</label>
-          <ul class="myy-files">
-            {% for file in files %}
-              <li><a href="{{ url_for('static', filename='uploads/' ~ file) }}" target="_blank">{{ file }}</a></li>
-            {% endfor %}
-          </ul>
-        </div>
-      </section>
+          <section>
+          <div class="my-files">
+            <label>My files</label>
+            <ul class="myy-files">
+              {% for file in files %}
+                <li>
+                  <a href="#" class="video-file" data-filename="{{ file }}">{{ file }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+          </div>
+        </section>
     </div>
-
     
-
-
-  <div class="video-list">
+  
     <div class="main-content">
-       <div class="video-wrapper">
-      <div class="video-tile">oryginal</div>
-        <div class="video-caption">Opis 1</div>
-    </div>
-    <div class="video-wrapper">
-      <div class="video-tile">wyjscie modelu 1 </div>
-        <div class="video-caption">Opis 2</div>
-    </div>
-    <div class="video-wrapper">
-      <div class="video-tile">wyjscie modelu 2</div>
-        <div class="video-caption">Opis 3</div>
-      </div>
-      <div class="video-wrapper">
-      <div class="video-tile">wyjscie modelu 3</div>
-        <div class="video-caption">Opis 4</div>
-     </div>
-    </div>
-  </div>
-  <div class="sidebars-wrapper">
-    <div class="sidebar-right">
-      <section>
 
-        <div class="views">
-          <label>VIEW OPTIONS</label>
-          <ul class="view-switch">
-            <li><a href="{{ url_for('interface') }}">Check quality</a></li>
-            <li><a href="{{ url_for('compareUI') }}">Compare models</a></li>
-            <li><a href="{{ url_for('trackUI') }}">Sperm cell track</a></li>
-          </ul>
+      <div class="video-list">
+        <div id="frame-container"></div>
+        <input type="range" id="frame-slider" min="0" step="1" value="0">
+        <p>Current folder: <span id="current-folder-name"></span></p>
+        <p>Current frame: <span id="current-frame-name"></span></p>
+        <button id="next-frame-btn"  onclick="nextFrame()">Next frame</button>
+        <button onclick="segmentCurrentFrame()">Segment</button>
+      </div>
+      
+      <div class="video-right">
+        <div class="video-wrapper">
+            <div class="video-tile">
+              <canvas class="mask-canvas" width="512" height="512"></canvas>
+              <canvas id="canvas1" width="512" height="512"></canvas>   
+            </div>
+            <div class="video-caption">Model 1: </div>
         </div>
 
-      </section>
-
-      <section>
-        <label>EXPORT TO</label>
-        <ul class="export">
-          <li><a href="{{ url_for('interface') }}">PNG</a></li>
-          <li><a href="{{ url_for('interface') }}">JSON</a></li>         
-        </ul>
-      </section>
+        <div class="video-wrapper">
+            <div class="video-tile">
+              <canvas class="mask-canvas" width="512" height="512"></canvas>
+              <canvas id="canvas2" width="512" height="512"></canvas>                     
+            </div>
+            <div class="video-caption">Model 2:</div>
+        </div>
+      </div>
     </div>
+  
 
-    <div class="sidebar-tools">
-      <section>
-        <label>TOOLS</label>
-        <ul class="tools-list">
-          <li class="eroded">eroded head</li>
-          <li class="missing">missing sperm cell</li>
-          <li class="short">short tail</li>
-          <li class="broken">broken tail</li>
-          <li class="artifact">artifact</li>
-        </ul>
-      </section>
+  <div class="sidebars-wrapper">
+    
+      <div class="sidebar-right">
+          <section>
+            <div class="views">
+              <label>VIEW OPTIONS</label>
+              <ul class="view-switch">
+                <li><a href="{{ url_for('interface') }}">Check quality</a></li>
+                <li><a href="{{ url_for('compareUI') }}">Compare models</a></li>
+                <li><a href="{{ url_for('trackUI') }}">Sperm cell track</a></li>
+              </ul>
+            </div>
+
+          </section>
+
+          <section>
+            <label>EXPORT TO</label>
+            <ul class="export">
+              <li><a href="{{ url_for('interface') }}">PNG</a></li>
+              <li><a href="{{ url_for('interface') }}">JSON</a></li>         
+            </ul>
+          </section>
+      </div>
+
+      <div class="sidebar-tools"> 
+        <section>
+          <label>TOOLS</label>
+          <section class="which-frame-btns">
+            <button class="which-frame-btn" data-canvas="canvas1">Model 1</button>
+            <button class="which-frame-btn" data-canvas="canvas2">Model 2</button>
+          </section>
+          <ul class="tools-list">
+            <button onclick="selectTool('eroded-head')"><span class="eroded">Eroded head</span></button>
+            <button onclick="selectTool('missing-cell')"><span class="missing">Missing sperm cell</span></button>
+            <button onclick="selectTool('short-tail')"><span class="short">Short tail</span></button>
+            <button onclick="selectTool('broken-tail')"><span class="broken">Broken tail</span></button>
+            <button onclick="selectTool('artifact')"><span class="artifact">Artifact</span></button>
+            <li></li>
+            <li></li>
+            <button onclick="selectTool('clear-last')"><span class="clear-last">CLEAR LAST</span></button>
+            <button onclick="selectTool('clear-all')"><span class="clear-all">CLEAR ALL</span></button>
+          </ul>
+          <div class="rotation-tool">
+            <label for="rotation">Rotate:</label>
+            <input type="range" id="rotationSlider" min="0" max="360" value="0">
+          </div>
+        </section>
+      </div>
+      
     </div>
 
   </div>
-</div>
 
 <div class="charts-container">
 <label>charts and analysis here!</label>
-
 </div>
+
+  <script src="{{ url_for('static', filename='js/toolsCompare.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/frames.js') }}"></script>
+
 
   <script>
     function toggleMenu() {
