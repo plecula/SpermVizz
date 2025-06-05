@@ -1,6 +1,6 @@
 # tu backend Flask (lub potem FastAPI)
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt     # for password protection
 from flask_login import LoginManager, login_user, login_required, logout_user, UserMixin
@@ -17,6 +17,12 @@ import numpy as np
 import time
 import torch
 import math
+import glob
+import shutil
+import json
+from datetime import datetime
+from PIL import Image
+from skimage.metrics import structural_similarity as ssim
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True" # for better performance
 
@@ -39,7 +45,6 @@ login_manager.login_view = 'login'      # if not registered, go to login page
 
 print(torch.cuda.is_available())
 
-
 # LOAD MODELS
 
 loaded_models = {}
@@ -53,7 +58,7 @@ def get_mask_generator(model_name):
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
     
     sam.to("cpu")
-        
+
     mask_generator = SamAutomaticMaskGenerator(
         sam,
         pred_iou_thresh=0.95,
@@ -70,6 +75,7 @@ def segment_frame_with_fallback(mask_generator, image):
     sam_model = mask_generator.model
 
     try:
+
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             sam_model.to("cuda")
@@ -95,6 +101,7 @@ def segment_frame_with_fallback(mask_generator, image):
         torch.cuda.empty_cache()
 
     return masks
+
 
 # TRACKING SEGMENTATION
 
@@ -153,7 +160,6 @@ def track_and_segment_sperm(folder, point_coords, model_name):
     return result_urls
 
 
-
 # USER MODEL
 class User(db.Model, UserMixin):        # UserMixin for is_active() etc.
     id = db.Column(db.Integer, primary_key=True)
@@ -177,7 +183,16 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        password1 = request.form['password1']  
+
+        if password != password1:
+            flash('Passwords must be the same!')
+            return redirect(url_for('register'))
+        
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+        # CHECKING SAME PASSWORD
+
 
         # CHECK IF USER EXISTS
         existing_user = User.query.filter_by(username=username).first()
@@ -249,7 +264,14 @@ def interface():
     files = os.listdir(upload_folder)
     files = [f for f in files if os.path.isfile(os.path.join(upload_folder, f))]
 
-    return render_template('segmentacja.html',models=models, files=files)
+     # Szukamy ostatniej maski
+    masks_dir = os.path.join("static", "masks")
+    last_mask = None
+    mask_files = glob.glob(os.path.join(masks_dir, "*.jpg"))
+    if mask_files:
+        latest_mask_path = max(mask_files, key=os.path.getmtime)
+        last_mask = os.path.basename(latest_mask_path)
+    return render_template('segmentacja.html', models=models, files=files, last_mask=last_mask)
 
 # EXTRACTING FRAMES FROM VIDEO
 @app.route('/extract_frames_existing', methods=['POST'])
@@ -301,6 +323,37 @@ def extract_frames_existing():
         return jsonify({'success': False, 'error': str(e)})
 
 
+
+def calculate_iou(mask, ground_truth):
+    # Ensure both masks are binary (0 or 1)
+    mask = (mask > 0).astype(np.uint8)
+    ground_truth = (ground_truth > 0.5).astype(np.uint8)
+
+    intersection = np.sum(np.logical_and(mask, ground_truth))
+    union = np.sum(np.logical_or(mask, ground_truth))
+
+    iou = intersection / union if union != 0 else 0
+    return iou
+
+def calculate_dsc(mask, ground_truth):
+    # Ensure both masks are binary (0 or 1)
+    mask = (mask > 0.5).astype(np.uint8)
+    ground_truth = (ground_truth > 0.5).astype(np.uint8)
+
+    intersection = np.sum(np.logical_and(mask, ground_truth))
+    return 2 * intersection / (np.sum(mask) + np.sum(ground_truth)) if (np.sum(mask) + np.sum(ground_truth)) != 0 else 0
+
+def calculate_ssim(original_image, mask_image):
+    # Convert the original image to grayscale
+    original_gray = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+
+    # Ensure the mask is binary (0 or 1) and reshape if needed
+    mask_image = (mask_image > 0.5).astype(np.uint8)  # Convert mask to binary
+
+    # Calculate SSIM between the grayscale original image and the binary mask
+    return ssim(original_gray, mask_image)
+
+  
 # SEGMENTATION FOR FRAMES
 
 @app.route('/segment_frame/<folder>/<frame_name>', methods=['GET'])
@@ -343,20 +396,57 @@ def segment_frame(folder, frame_name):
         print("Mask generation time:", time.time() - start)
         
         # Save mask
-        mask_filename = f"m_{frame_name}_{folder}_{uuid.uuid4().hex[:6]}"
+
+        name_wo_ext = os.path.splitext(frame_name)[0]           # np. "frame_1"
+        folder_suffix = folder.split('_')[-1]                   # np. "abc"
+        mask_filename = f"{name_wo_ext}_{folder_suffix}.jpg"    # np. "frame_1_abc.png"
         mask_path = BASE_DIR / "app" / "static" / "masks" / mask_filename
-        os.makedirs(mask_path.parent, exist_ok=True)
+               
+
+        session['last_mask'] = mask_filename  # zapamiętaj maskę do eksportu
+
 
         mask_image = (1 - best_mask) * 255
         cv2.imwrite(str(mask_path), mask_image.astype(np.uint8))
+        
+        # Calculate Metrics
+        original_image = cv2.imread(str(frame_path))  # Read the original image
+        original_gray = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+        iou = calculate_iou(best_mask, original_gray)
+        dsc = calculate_dsc(best_mask, original_gray)
+        ssim_score = calculate_ssim(original_image, mask_image)
+
+
+        print(f"Original image shape: {original_image.shape}")
+        print(f"Best mask shape: {best_mask.shape}")
+
+        print(f"IoU: {iou}")
+        print(f"DSC: {dsc}")
+        print(f"SSIM: {ssim_score}")
 
         return jsonify({
-            'success': True, 
-            'mask_url': url_for('static', filename=f"masks/{mask_filename}")
-            })
+            'success': True,
+            'mask_url': url_for('static', filename=f"masks/{mask_filename}"),
+            'iou': iou,
+            'dsc': dsc,
+            'ssim': ssim_score
+        })
 
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)})
+# weronika:
+#         mask_filename = f"m_{frame_name}_{folder}_{uuid.uuid4().hex[:6]}"
+#         mask_path = BASE_DIR / "app" / "static" / "masks" / mask_filename
+#         os.makedirs(mask_path.parent, exist_ok=True)
+
+#         mask_image = (1 - best_mask) * 255
+#         cv2.imwrite(str(mask_path), mask_image.astype(np.uint8))
+
+#         return jsonify({
+#             'success': True, 
+#             'mask_url': url_for('static', filename=f"masks/{mask_filename}")
+#             })
+
+#     except Exception as e:
+#         return jsonify({'success': False, 'error': str(e)})
 
 
 # TRACKING SPERM CELL
@@ -375,9 +465,77 @@ def track_and_segment_api():
         result_urls = track_and_segment_sperm(folder, points, model_name)
 
         return jsonify({'success': True, 'results': result_urls})
+      
+      #??????
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+        
+
+
+#EXPORT TO PNG, JSON    
+@app.route("/export/png")
+@login_required
+def export_png():
+    last_mask = session.get('last_mask') 
+
+    if not last_mask:
+        return "No mask available for export", 400
+
+    masks_dir = os.path.join("static", "masks")
+    mask_path = os.path.join(masks_dir, last_mask)
+
+    if not os.path.exists(mask_path):
+        return f"File does not exist: {mask_path}", 404
+    
+    png_filename = last_mask.replace('.jpg', '.png')
+    png_path = os.path.join(masks_dir, png_filename)
+    
+
+    if not os.path.exists(png_path):
+            try:
+                # Otwórz plik JPG za pomocą PIL i zapisz jako PNG
+                image = Image.open(mask_path)
+                image.save(png_path, 'PNG')  # Zapisz jako PNG
+            except Exception as e:
+                return f"Error converting image: {str(e)}", 500
+
+        # Teraz, kiedy plik PNG jest już zapisany, wysyłamy go do użytkownika
+    return send_from_directory(directory=masks_dir, path=png_filename, as_attachment=True)
+
+
+
+@app.route('/export/json')
+@login_required
+def export_json():
+    last_mask = session.get('last_mask') 
+
+    masks_dir = os.path.join("static", "masks")
+    mask_path = os.path.join(masks_dir, last_mask)
+
+    image = Image.open(mask_path)
+    width, height = image.size  # Wymiary obrazu
+
+    # Customize metadata
+    data = {
+        "filename": last_mask,
+        "width": width,
+        "height": height,
+        "info": "Sample metadata",  # Customize as needed
+        "generated_at": datetime.now().isoformat()
+    }
+
+    download_path = os.path.join("static", "downloads")
+    os.makedirs(download_path, exist_ok=True)
+
+    json_filename = last_mask.replace('.jpg', '.json')
+    json_path = os.path.join(download_path, json_filename)
+
+    with open(json_path, 'w') as f:
+        json.dump(data, f)
+
+    return send_from_directory(directory=download_path, path=json_filename, as_attachment=True)
+
 
 
 
@@ -432,8 +590,11 @@ def logout():
     return redirect(url_for('home'))
 
 
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)
 
 # with app.app_context():
-#      db.create_all()  # tworzy tabele w bazie
+#      db.create_all()  # tworzy tabele w bazie 

@@ -35,7 +35,17 @@
     <div class="menu-overlay" id="menu">
         <div class="menu-content">
           <div class="menu-close" onclick="toggleMenu()">&times;</div>
-          <a href="index.html">STRONA GŁÓWNA</a>
+
+             <a href="index.html">STRONA GŁÓWNA</a>
+     
+           <a href="segmentacja.html">MOJE KONTO</a>
+
+             <a href="wideo.html">DODAJ WIDEO</a>
+
+            <a href="compare.html">PORÓWNAJ MODELE</a>
+
+<!--           <a href="index.html">STRONA GŁÓWNA</a> -->
+
         
           {% if 'username' in session %}  
             <a>     
@@ -45,13 +55,17 @@
                 </button>         
               </form>  
             </a>   
-            <a href="wideo.html">DODAJ WIDEO</a>
+
+<!--             <a href="wideo.html">DODAJ WIDEO</a> -->
+
           {% else %}
             <a href="register.html">ZAREJESTRUJ</a>
             <a href="logowanie.html">ZALOGUJ</a>
           {% endif %}        
           
+
           <a href="https://github.com/w3ron1ka/SpermVizz" target="_blank">AUTORZY</a>
+
         </div>
     </div>
 
@@ -133,8 +147,10 @@
             <section>
               <label>EXPORT TO</label>
               <ul class="export">
-                <li><a href="{{ url_for('interface') }}">PNG</a></li>
-                <li><a href="{{ url_for('interface') }}">JSON</a></li>         
+
+                <li><a href="{{ url_for('export_png') }}?filename={{ last_mask }}">PNG</a></li>
+                <li><a href="{{ url_for('export_json') }}?filename={{ last_mask }}">JSON</a></li>       
+
               </ul>
             </section>
         </div>
@@ -164,7 +180,11 @@
     </div>
 
   <div class="charts-container">
-  <label>charts and analysis here!</label>
+
+    <p><strong>IoU:</strong> <span id="iou-value">{{ iou }}</span></p>
+    <p><strong>DSC:</strong> <span id="dsc-value">{{ dsc }}</span></p>
+    <p><strong>SSIM:</strong> <span id="ssim-value">{{ ssim_score }}</span></p>
+
   </div>
 
     <script src="{{ url_for('static', filename='js/tools.js') }}"></script>
@@ -183,6 +203,59 @@
         }
       }
     </script>
+
+    <script>
+  function downloadFile(type) {
+    const filename = "{{ last_mask }}";  // Wartość "last_mask" musi być ustawiona w backendzie
+
+    if (!filename) {
+      alert("No file to download!");
+      return;
+    }
+
+    const url = `/export/${type}?filename=${filename}`;
+
+    fetch(url, { method: 'GET' })
+      .then(response => response.blob())  // Pobieramy plik jako blob
+      .then(blob => {
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob); // Tworzymy URL z blob
+        link.download = filename.replace(".jpg", `.${type}`);  // Nazwa pliku do pobrania
+        link.click(); // Automatycznie klikamy, żeby pobrać
+      })
+      .catch(error => {
+        console.error('Download failed', error);
+        alert('There was an error while downloading.');
+      });
+  }
+</script>
+
+ <script>
+        // JavaScript to make the AJAX request and update the page
+        function fetchSegmentationData(folder, frameName, model) {
+            fetch(`/segment_frame/${folder}/${frameName}?model=${model}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update the mask image
+                        document.getElementById("segmented-image").src = data.mask_url;
+
+                        // Update the metrics
+                        document.getElementById("iou-value").textContent = data.iou;
+                        document.getElementById("dsc-value").textContent = data.dsc;
+                        document.getElementById("ssim-value").textContent = data.ssim;
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching segmentation data:', error);
+                    alert('Error fetching segmentation data');
+                });
+        }
+
+</script>
+
 
   </body>
 </html>

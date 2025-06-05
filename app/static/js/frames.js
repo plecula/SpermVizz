@@ -8,7 +8,6 @@ let trackMasks = [];
 
 const pageType = document.body.getAttribute('data-page-type');
 
-
 function cutCage() {
     const filename = document.getElementById('video-selector').value;
     const start = document.getElementById('start-time').value;
@@ -35,7 +34,9 @@ function cutCage() {
   document.querySelectorAll('.model-btn').forEach(button => {
     button.addEventListener('click', () => {
       
+
       if (pageType === 'single' || pageType === 'track'){
+
         document.querySelectorAll('.model-btn').forEach(btn => btn.classList.remove('selected'));
 
         button.classList.add('selected');
@@ -59,7 +60,6 @@ function cutCage() {
           selectedModels.push(modelName);
         }
       }
-      
 
     })
   })
@@ -114,6 +114,7 @@ function cutCage() {
              };
              image1.src = maskUrl1;
     
+
             captions[0].innerText = `Model 1: ${selectedModels[0]}`;
           } else {
             alert('First model error: ' + result1.error);
@@ -199,6 +200,7 @@ function cutCage() {
 
       
     }
+
   }
 
 
@@ -214,6 +216,7 @@ function cutCage() {
  
 
 //skrypt do klatkowania
+
 document.querySelectorAll('.video-file').forEach(link => {
   link.addEventListener('click', async function(e) {
     e.preventDefault();
@@ -259,8 +262,10 @@ document.querySelectorAll('.video-file').forEach(link => {
     // suwak
     slider.oninput = function() {
       const images = frameContainer.querySelectorAll('img');
+
       images.forEach(img => img.style.display = 'none'); // ukrywa wszystkie
       images[this.value].style.display = 'block';        // pokazuje tylko wybraną
+
       currentFrameIndex = parseInt(this.value);
 
       // update nazwy
@@ -273,7 +278,6 @@ document.querySelectorAll('.video-file').forEach(link => {
 
   });
 });
-  
 
 // tracking
 
@@ -366,3 +370,4 @@ function segmentWithPoints() {
   
 
 }
+

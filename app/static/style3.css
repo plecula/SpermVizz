@@ -236,8 +236,24 @@ align-items: center;
   flex-direction: column;
   gap: 5px;
   justify-content: center;
-
 }
+/* 
+#frame-container {
+margin-left: 15px;
+margin-right: 15px;
+background: #ccc;
+border-radius: 15px;
+padding: 0; 
+display: flex;
+flex-direction: column;
+justify-content: flex-start;
+align-items: center;
+width: 512px; 
+box-sizing: border-box;
+overflow: hidden;
+height: 512px; 
+} */
+
 
 #frame-container {
 margin-left: 15px;
@@ -254,6 +270,7 @@ box-sizing: border-box;
 overflow: hidden;
 height: 512px; 
 }
+
 
   .video-tile  {
 background: #ccc;
@@ -441,6 +458,30 @@ outline: none;
 
 .tools-list button:hover {
   background: #d2d2d2;
+
+/* }
+
+.tools-list button span {
+  flex: 1;
+}
+
+.tools-list .eroded { color: green; }
+.tools-list .missing { color: goldenrod; }
+.tools-list .short { color: navy; }
+.tools-list .broken { color: orangered; }
+.tools-list .artifact { color: purple; }
+.tools-list .clear-last,
+.tools-list .clear-all { color: #bb0000; }
+
+
+.rotation-tool {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+ */
+
 }
 
 .tools-list button span {
@@ -462,6 +503,7 @@ outline: none;
   flex-direction: column;
   gap: 8px;
 }
+
 
 .rotation-tool label {
   font-size: 16px;
@@ -503,3 +545,4 @@ outline: none;
   padding: 20px;
   height: 200px;
 }
+

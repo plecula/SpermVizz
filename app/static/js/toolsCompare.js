@@ -261,4 +261,6 @@ function drawArrow(context, fromX, fromY, toX, toY, color = "black") {
   context.lineTo(toX, toY);
   context.fillStyle = color;
   context.fill();
+
 }
+

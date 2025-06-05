@@ -143,7 +143,7 @@ footer {
   text-align: left;
   font-size: 1.8rem;
   color: #666;
-  height: 100vh;
+
 }
 
 /* LOGIN */
@@ -257,4 +257,29 @@ all: unset; /* wyczyść wszystkie style przeglądarki */
   border: none;
   border-bottom: none;
   outline: none;
+}
+/* Wyśrodkowanie sekcji na stronie */
+.project-description {
+    background-color: #f2f2f2; /* Szare tło */
+    padding: 30px; 
+    border-radius: 15px;
+    width: 80%;
+    max-width: 60%; 
+    margin: 50px auto; 
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center; 
+}
+
+/* Stylowanie nagłówka */
+.project-description h1 {
+    font-size: 2em;
+    color: #333; 
+    margin-bottom: 15px;
+}
+
+/* Stylowanie paragrafu */
+.project-description p {
+    font-size: 34px;
+    color: #000000; 
+    line-height: 1.6;
 }
