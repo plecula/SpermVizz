@@ -74,32 +74,56 @@ function cutCage() {
   }
 
   function segmentCurrentFrame() {
+   
+    const frameNumber = currentFrameIndex;
+    const frameName = `frame_${frameNumber + 1}.jpg`;
 
+    console.log(`Segmenting: /segment_frame/${currentFolder}/${frameName}`);
+  
     if (pageType === 'compare') {
       if (selectedModels.length !== 2) {
         alert('Wybierz dokładnie 2 modele!');
         return;
       }
-    
-      const frameNumber = currentFrameIndex;
-      const frameName = `frame_${frameNumber + 1}.jpg`;
-    
+ 
+
+      const maskCanvases = document.querySelectorAll('.mask-canvas');
+      const captions = document.querySelectorAll('.video-caption');
+
+
       // segmentacja dla modelu 1
       fetch(`/segment_frame/${currentFolder}/${frameName}?model=${selectedModels[0]}`)
         .then(response => response.json())
         .then(result1 => {
           if (result1.success) {
             const maskUrl1 = result1.mask_url;
+
+             // canvas z maską
+             const canvas1 = maskCanvases[0];
+             //const canvas1 = document.getElementsByClassName('mask-canvas')[0];
+             const ctx1 = canvas1.getContext('2d');
+             const image1 = new Image();
+             image1.onload = function() {
+               ctx1.clearRect(0, 0, canvas1.width, canvas1.height);
+               ctx1.drawImage(image1, 0, 0, canvas1.width, canvas1.height);
+             };
+             image1.src = maskUrl1;
     
-            // Wideo 1
-            const tile1 = document.querySelector('.video-right .video-wrapper:nth-child(1) .video-tile');
-            tile1.innerHTML = `<img src="${maskUrl1}" style="max-width: 100%; max-height: 100%;">`;
+          //   // Wideo 1
+          //   const tile1 = document.querySelector('.video-right .video-wrapper:nth-child(1) .video-tile');
+          //   tile1.innerHTML = `<img src="${maskUrl1}" style="max-width: 100%; max-height: 100%;">`;
     
-            // podpis
-            document.querySelector('.video-right .video-wrapper:nth-child(1) .video-caption').innerText = `Model 1: ${selectedModels[0]}`;
+          //   // podpis
+          //   document.querySelector('.video-right .video-wrapper:nth-child(1) .video-caption').innerText = `Model 1: ${selectedModels[0]}`;
+          // } else {
+          //   alert('First model error: ' + result1.error);
+          // }
+
+            captions[0].innerText = `Model 1: ${selectedModels[0]}`;
           } else {
-            alert('Błąd dla modelu 1: ' + result1.error);
+            alert('First model error: ' + result1.error);
           }
+
     
           // segmentacja dla modelu 2 po zakończeniu pierwszego
           return fetch(`/segment_frame/${currentFolder}/${frameName}?model=${selectedModels[1]}`)
@@ -110,19 +134,25 @@ function cutCage() {
             const maskUrl2 = result2.mask_url;
     
             // canvas z maską
-            const canvas = document.getElementById('mask-canvas');
-            const ctx = canvas.getContext('2d');
-            const image = new Image();
-            image.onload = function() {
-              ctx.clearRect(0, 0, canvas.width, canvas.height);
-              ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+            const canvas2 = maskCanvases[1];
+            //const canvas2 = document.getElementsByClassName('mask-canvas')[1];
+            const ctx2 = canvas2.getContext('2d');
+            const image2 = new Image();
+            image2.onload = function() {
+              ctx2.clearRect(0, 0, canvas2.width, canvas2.height);
+              ctx2.drawImage(image2, 0, 0, canvas2.width, canvas2.height);
             };
-            image.src = maskUrl2;
+            image2.src = maskUrl2;
     
             // podpis
-            document.querySelector('.video-right .video-wrapper:nth-child(2) .video-caption').innerText = `Model 2: ${selectedModels[1]}`;
+        //     document.querySelector('.video-right .video-wrapper:nth-child(2) .video-caption').innerText = `Model 2: ${selectedModels[1]}`;
+        //   } else {
+        //     alert('Second model error: ' + result2.error);
+        //   }
+        // })
+          captions[1].innerText = `Model 2: ${selectedModels[1]}`;
           } else {
-            alert('Błąd dla modelu 2: ' + result2.error);
+            alert('Second model error: ' + result2.error);
           }
         })
         .catch(error => {
@@ -135,13 +165,7 @@ function cutCage() {
         alert("At first choose segmentation model!");
         return;
       }
-  
-      const frameNumber = currentFrameIndex;
-      const frameName = `frame_${frameNumber+ 1}.jpg`;
-  
-      console.log(`Segmenting: /segment_frame/${currentFolder}/${frameName}`);
-  
-  
+
       fetch(`/segment_frame/${currentFolder}/${frameName}?model=${encodeURIComponent(selectedModel)}`)
         .then(response => response.json())
         .then(result => {
@@ -155,7 +179,7 @@ function cutCage() {
   
               // maska w video-tile
             const tile1 = document.querySelector('.video-right .video-wrapper:nth-child(1) .video-tile');
-            tile1.innerHTML = `<img src="${maskUrl}" style="max-width: 100%; max-height: 100%;">`;
+            tile1.innerHTML = `<img src="${maskUrl} "style="max-width: 100%; max-height: 100%;">`;  //"style="max-width: 100%; max-height: 100%;"
   
             // maska w canvas
             const canvas = document.getElementById('mask-canvas');
@@ -167,57 +191,20 @@ function cutCage() {
             };
             image.src = maskUrl;
           
-          
-          
+           // podpis         
+           document.querySelector('.video-right .video-wrapper:nth-child(1) .video-caption').innerText = `Frame: ${frameName}`;
+           document.querySelector('.video-right .video-wrapper:nth-child(2) .video-caption').innerText = `Editing frame: ${frameName}`;
+
           } else {
             alert('Error jol: ' + result.error);
           }
         });
     }
-    if(!selectedModel) {
-      alert("At first choose segmentation model!");
-      return;
-    }
-
-    const frameNumber = currentFrameIndex;
-    const frameName = `frame_${frameNumber+ 1}.jpg`;
-
-    console.log(`Segmenting: /segment_frame/${currentFolder}/${frameName}`);
-
-
-    fetch(`/segment_frame/${currentFolder}/${frameName}?model=${encodeURIComponent(selectedModel)}`)
-      .then(response => response.json())
-      .then(result => {
-        if (result.success) {
-          const maskUrl = result.mask_url;
-
-          const resDiv = document.getElementById('segment-result');
-          if (resDiv) {
-            resDiv.innerHTML = `<img src="${maskUrl}" alt="Segmentation mask">`;
-          }
-
-            // maska w video-tile
-          const tile1 = document.querySelector('.video-right .video-wrapper:nth-child(1) .video-tile');
-          tile1.innerHTML = `<img src="${maskUrl}" style="max-width: 100%; max-height: 100%;">`;
-
-          // maska w canvas
-          const canvas = document.getElementById('mask-canvas');
-          const ctx = canvas.getContext('2d');
-          const image = new Image();
-          image.onload = function() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-          };
-          image.src = maskUrl;
-        
-        
-        
-        } else {
-          alert('Error jol: ' + result.error);
-        }
-      });
+    
   }
 
+
+  
   function nextFrame() {
     if (currentFrameIndex < framesList.length - 1) {
       currentFrameIndex++;

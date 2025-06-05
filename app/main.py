@@ -19,6 +19,11 @@ import torch
 import glob
 import shutil
 import json
+from datetime import datetime
+from PIL import Image
+from skimage.metrics import structural_similarity as ssim
+
+
 
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True" # for better performance
@@ -42,18 +47,7 @@ login_manager.login_view = 'login'      # if not registered, go to login page
 
 print(torch.cuda.is_available())
 
-#print(torch.cuda.get_device_name(0))
-# LOAD SEG MODEL
-# model_name = "sam_vit_b_01ec64.pth"
-# sam_checkpoint = BASE_DIR / "video_processing" / "models" / model_name         #"sam_vit_b_01ec64.pth"      # or other one
-# model_type = 'vit_l' if 'vit_l' in model_name else 'vit_b'
-# sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
-# sam.to("cuda")   # or cpu!!!  
-# mask_generator = SamAutomaticMaskGenerator(
-#     sam,
-#     pred_iou_thresh= 0.9,
-#     points_per_side=32
-# )
+
 
 # LOAD MODELS
 
@@ -68,7 +62,6 @@ def get_mask_generator(model_name):
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
     
     sam.to("cpu")
-        
     mask_generator = SamAutomaticMaskGenerator(
         sam,
         pred_iou_thresh=0.95,
@@ -80,6 +73,38 @@ def get_mask_generator(model_name):
     return mask_generator
 
 
+def segment_frame_with_fallback(mask_generator, image):
+   
+    sam_model = mask_generator.model
+
+    try:
+      
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            sam_model.to("cuda")
+        else:
+            sam_model.to("cpu")
+
+        with torch.no_grad():
+            masks = mask_generator.generate(image)
+
+    except torch.cuda.OutOfMemoryError:
+        print("OOM during generating — switching to CPU")
+
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+        sam_model.to("cpu")
+
+        with torch.no_grad():
+            masks = mask_generator.generate(image)
+
+    finally:
+        sam_model.to("cpu")
+        torch.cuda.empty_cache()
+
+    return masks
+
 # USER MODEL
 class User(db.Model, UserMixin):        # UserMixin for is_active() etc.
     id = db.Column(db.Integer, primary_key=True)
@@ -89,6 +114,25 @@ class User(db.Model, UserMixin):        # UserMixin for is_active() etc.
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
+
+# Obliczanie IoU
+def calculate_iou(pred_mask, true_mask):
+    intersection = np.logical_and(pred_mask, true_mask)
+    union = np.logical_or(pred_mask, true_mask)
+    iou = np.sum(intersection) / np.sum(union)
+    return iou
+
+# Obliczanie DSC (Dice Similarity Coefficient)
+def calculate_dsc(pred_mask, true_mask):
+    intersection = np.logical_and(pred_mask, true_mask)
+    return 2 * np.sum(intersection) / (np.sum(pred_mask) + np.sum(true_mask))
+
+# Obliczanie SSIM (dla porównania jakości obrazu)
+def calculate_ssim(pred_image, true_image):
+    return ssim(pred_image, true_image, multichannel=True)
+
 
 
 # HOME
@@ -299,56 +343,62 @@ def segment_frame(folder, frame_name):
         return jsonify({'success': False, 'error': str(e)})
 
 
-
-
 #EXPORT TO PNG, JSON    
 @app.route("/export/png")
 @login_required
 def export_png():
-    filename = request.args.get("filename")
+    last_mask = session.get('last_mask') 
 
-    if not filename:
-        return "Brak pliku do eksportu!", 400
+    if not last_mask:
+        return "No mask available for export", 400
 
     masks_dir = os.path.join("static", "masks")
-    downloads_dir = os.path.join("static", "downloads")
-    os.makedirs(downloads_dir, exist_ok=True)
-
-    mask_path = os.path.join(masks_dir, filename)
-    destination = os.path.join(downloads_dir, filename.replace(".jpg", ".png"))
+    mask_path = os.path.join(masks_dir, last_mask)
 
     if not os.path.exists(mask_path):
-        return f"Plik nie istnieje: {mask_path}", 404
+        return f"File does not exist: {mask_path}", 404
+    
+    png_filename = last_mask.replace('.jpg', '.png')
+    png_path = os.path.join(masks_dir, png_filename)
+    
 
-    shutil.copyfile(mask_path, destination)
+    if not os.path.exists(png_path):
+            try:
+                # Otwórz plik JPG za pomocą PIL i zapisz jako PNG
+                image = Image.open(mask_path)
+                image.save(png_path, 'PNG')  # Zapisz jako PNG
+            except Exception as e:
+                return f"Error converting image: {str(e)}", 500
 
-    return send_from_directory(directory=downloads_dir, path=os.path.basename(destination), as_attachment=True)
+        # Teraz, kiedy plik PNG jest już zapisany, wysyłamy go do użytkownika
+    return send_from_directory(directory=masks_dir, path=png_filename, as_attachment=True)
+
 
 
 @app.route('/export/json')
 @login_required
 def export_json():
-    filename = request.args.get('filename')
-    if not filename:
-        return "No filename provided", 400
+    last_mask = session.get('last_mask') 
 
-    data = {"filename": filename, "info": "sample metadata"}  # przyklad jsona - do modyfikacji
+    masks_dir = os.path.join("static", "masks")
+    mask_path = os.path.join(masks_dir, last_mask)
 
-   # json_data = {
-    #    "filename": frame_name,
-     #   "mask_filename": mask_filename,
-      #  "model_used": model_name,
-       # "image_size": list(image.shape[:2]),
-        #"num_masks": len(masks),
-       # "predicted_iou": float(masks_sorted[0]['predicted_iou']),
-       # "bounding_box": list(masks_sorted[0]['bbox']),
-       # "generated_at": datetime.now().isoformat()
-   # }
+    image = Image.open(mask_path)
+    width, height = image.size  # Wymiary obrazu
+
+    # Customize metadata
+    data = {
+        "filename": last_mask,
+        "width": width,
+        "height": height,
+        "info": "Sample metadata",  # Customize as needed
+        "generated_at": datetime.now().isoformat()
+    }
 
     download_path = os.path.join("static", "downloads")
     os.makedirs(download_path, exist_ok=True)
 
-    json_filename = filename.replace('.jpg', '.json')
+    json_filename = last_mask.replace('.jpg', '.json')
     json_path = os.path.join(download_path, json_filename)
 
     with open(json_path, 'w') as f:
@@ -356,6 +406,63 @@ def export_json():
 
     return send_from_directory(directory=download_path, path=json_filename, as_attachment=True)
 
+
+@app.route('/compare_segmentations')
+@login_required
+def compare_segmentations():
+    true_image_path = "path_to_true_image.jpg"  
+    pred_mask_path = "path_to_predicted_mask.png"  
+
+    true_image = cv2.imread(true_image_path)
+    pred_mask = cv2.imread(pred_mask_path, cv2.IMREAD_GRAYSCALE)
+
+    # Przekształcenie maski do postaci binarnej (0 lub 255)
+    _, pred_mask = cv2.threshold(pred_mask, 127, 255, cv2.THRESH_BINARY)
+
+    # Obliczanie metryk
+    iou = calculate_iou(pred_mask, true_image)
+    dsc = calculate_dsc(pred_mask, true_image)
+    ssim_value = calculate_ssim(pred_mask, true_image)
+
+    return jsonify({
+        'IoU': iou,
+        'DSC': dsc,
+        'SSIM': ssim_value
+    })
+
+@app.route('/export/comparison_image')
+@login_required
+def export_comparison_image():
+    # Wczytaj obraz i maskę
+    true_image = cv2.imread("path_to_true_image.jpg")
+    pred_mask = cv2.imread("path_to_predicted_mask.png", cv2.IMREAD_GRAYSCALE)
+
+    # Nałóż maskę na obraz
+    result_image = true_image.copy()
+    result_image[pred_mask == 255] = [0, 255, 0]  # Nałóż maskę na obraz w zielonym kolorze
+
+    # Zapisz wynikowy obraz
+    result_image_path = "static/comparison_result.jpg"
+    cv2.imwrite(result_image_path, result_image)
+
+    return send_from_directory(directory='static', path='comparison_result.jpg', as_attachment=True)
+
+
+
+@app.route('/export_segmented_image')
+@login_required
+def export_segmented_image():
+    mask_filename = request.args.get('filename')
+    if not mask_filename:
+        return "No filename provided", 400
+
+    masks_dir = os.path.join("static", "masks")
+    mask_path = os.path.join(masks_dir, mask_filename)
+
+    if not os.path.exists(mask_path):
+        return f"File does not exist: {mask_path}", 404
+
+    return send_from_directory(directory=masks_dir, path=mask_filename, as_attachment=True)
 
 
 # MY ACCOUNT - COMPARE MODELS
@@ -409,24 +516,6 @@ def logout():
     return redirect(url_for('home'))
 
 
-def segment_frame_with_fallback(mask_generator, image):
-    try:
-        with torch.no_grad():
-            masks = mask_generator.generate(image)
-    except torch.cuda.OutOfMemoryError:
-        print("OOM during generating — switching to CPU")
-
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-
-        # switch to cpu
-        mask_generator.model.to("cpu")
-
-        with torch.no_grad():
-            masks = mask_generator.generate(image)
-            
-
-    return masks
 
 
 
