@@ -35,6 +35,7 @@
     <div class="menu-overlay" id="menu">
         <div class="menu-content">
           <div class="menu-close" onclick="toggleMenu()">&times;</div>
+
              <a href="index.html">STRONA GŁÓWNA</a>
      
            <a href="segmentacja.html">MOJE KONTO</a>
@@ -42,6 +43,9 @@
              <a href="wideo.html">DODAJ WIDEO</a>
 
             <a href="compare.html">PORÓWNAJ MODELE</a>
+
+<!--           <a href="index.html">STRONA GŁÓWNA</a> -->
+
         
           {% if 'username' in session %}  
             <a>     
@@ -52,11 +56,15 @@
               </form>  
             </a>   
 
+<!--             <a href="wideo.html">DODAJ WIDEO</a> -->
+
           {% else %}
             <a href="register.html">ZAREJESTRUJ</a>
             <a href="logowanie.html">ZALOGUJ</a>
           {% endif %}        
           
+
+          <a href="https://github.com/w3ron1ka/SpermVizz" target="_blank">AUTORZY</a>
 
         </div>
     </div>
@@ -139,8 +147,10 @@
             <section>
               <label>EXPORT TO</label>
               <ul class="export">
+
                 <li><a href="{{ url_for('export_png') }}?filename={{ last_mask }}">PNG</a></li>
                 <li><a href="{{ url_for('export_json') }}?filename={{ last_mask }}">JSON</a></li>       
+
               </ul>
             </section>
         </div>
@@ -170,9 +180,11 @@
     </div>
 
   <div class="charts-container">
+
     <p><strong>IoU:</strong> <span id="iou-value">{{ iou }}</span></p>
     <p><strong>DSC:</strong> <span id="dsc-value">{{ dsc }}</span></p>
     <p><strong>SSIM:</strong> <span id="ssim-value">{{ ssim_score }}</span></p>
+
   </div>
 
     <script src="{{ url_for('static', filename='js/tools.js') }}"></script>
@@ -243,7 +255,6 @@
         }
 
 </script>
-
 
 
   </body>

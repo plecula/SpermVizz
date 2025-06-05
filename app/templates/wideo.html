@@ -59,16 +59,20 @@
     {% endif %}        
     
 
+    <a href="https://github.com/w3ron1ka/SpermVizz" target="_blank">AUTORZY</a>
+
   </div>
 </div>
 
 <main class="upload-section">
   <form class="upload-box" action="{{ url_for('video') }}" method="POST" enctype="multipart/form-data">
     <label for="video-upload" class="upload-area">
+      <!-- <p class="upload-icon">Upload</p> -->
       <img src="IMG/upload-icon.svg" alt="Upload" class="upload-icon">
       <input type="file" name="file" id="video-upload" accept="video/*, image/*" hidden>
-      <video id="preview-video" autoplay muted controls style="display: none"></video>
-      <img id="preview-image" style="display: none"/>
+        <video id="preview-video" autoplay muted controls style="display: none"></video>
+        <img id="preview-image" style="display: none"/>
+        
     </label>
     <button type="submit" class="button login">DODAJ WIDEO</button>
 

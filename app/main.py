@@ -12,19 +12,17 @@ from pathlib import Path
 import cv2
 import uuid  # do tworzenia unikalnych folderów
 from flask import jsonify
-from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
+from segment_anything import sam_model_registry, SamAutomaticMaskGenerator, SamPredictor
 import numpy as np
 import time
 import torch
+import math
 import glob
 import shutil
 import json
 from datetime import datetime
 from PIL import Image
 from skimage.metrics import structural_similarity as ssim
-
-
-
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True" # for better performance
 
@@ -47,8 +45,6 @@ login_manager.login_view = 'login'      # if not registered, go to login page
 
 print(torch.cuda.is_available())
 
-
-
 # LOAD MODELS
 
 loaded_models = {}
@@ -62,6 +58,7 @@ def get_mask_generator(model_name):
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
     
     sam.to("cpu")
+
     mask_generator = SamAutomaticMaskGenerator(
         sam,
         pred_iou_thresh=0.95,
@@ -78,7 +75,7 @@ def segment_frame_with_fallback(mask_generator, image):
     sam_model = mask_generator.model
 
     try:
-      
+
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
             sam_model.to("cuda")
@@ -104,6 +101,64 @@ def segment_frame_with_fallback(mask_generator, image):
         torch.cuda.empty_cache()
 
     return masks
+
+
+# TRACKING SEGMENTATION
+
+def track_and_segment_sperm(folder, point_coords, model_name):
+    frame_folder = BASE_DIR / "app" / "static" / "uploads" / folder
+    frame_files = sorted([f for f in os.listdir(frame_folder) if f.lower().endswith('.jpg')])
+
+    sam_checkpoint = BASE_DIR / "video_processing" / "models" / model_name
+    model_type = 'vit_l' if 'vit_l' in model_name else 'vit_b'
+    sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+    
+    # if torch.cuda.is_available():
+    #     torch.cuda.empty_cache()
+    #     sam.to("cuda")
+    # else:
+    #     sam.to("cpu")
+
+    predictor = SamPredictor(sam)
+
+    result_urls = []
+
+    sam.to("cpu")       # or cuda
+
+    for frame_file in frame_files:
+        frame_path = frame_folder / frame_file
+        image = cv2.imread(str(frame_path))
+        image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+        predictor.set_image(image_rgb)
+
+        input_points = np.array(point_coords)
+        input_labels = np.array([1] * len(point_coords))
+
+        masks, scores, logits = predictor.predict(
+            point_coords=input_points,
+            point_labels=input_labels,
+            multimask_output=True
+        )
+
+        overlay = np.zeros_like(image_rgb, dtype=np.uint8)
+
+        # Nakładamy maski — na przykład maskę o najwyższym score:
+        best_mask = masks[0]
+
+        overlay[:,:,0] = (best_mask * 255).astype(np.uint8)
+        blended = cv2.addWeighted(image_rgb, 0.6, overlay, 0.3, 0)
+
+        mask_filename = f"tracked_{frame_file}_{uuid.uuid4().hex[:6]}.png"
+        mask_path = BASE_DIR / "app" / "static" / "masks" / mask_filename
+        os.makedirs(mask_path.parent, exist_ok=True)
+
+        cv2.imwrite(str(mask_path), cv2.cvtColor(blended, cv2.COLOR_RGB2BGR))
+
+        result_urls.append(url_for('static', filename=f"masks/{mask_filename}"))
+
+    return result_urls
+
 
 # USER MODEL
 class User(db.Model, UserMixin):        # UserMixin for is_active() etc.
@@ -298,7 +353,9 @@ def calculate_ssim(original_image, mask_image):
     # Calculate SSIM between the grayscale original image and the binary mask
     return ssim(original_gray, mask_image)
 
+  
 # SEGMENTATION FOR FRAMES
+
 @app.route('/segment_frame/<folder>/<frame_name>', methods=['GET'])
 @login_required
 def segment_frame(folder, frame_name):
@@ -339,6 +396,7 @@ def segment_frame(folder, frame_name):
         print("Mask generation time:", time.time() - start)
         
         # Save mask
+
         name_wo_ext = os.path.splitext(frame_name)[0]           # np. "frame_1"
         folder_suffix = folder.split('_')[-1]                   # np. "abc"
         mask_filename = f"{name_wo_ext}_{folder_suffix}.jpg"    # np. "frame_1_abc.png"
@@ -374,6 +432,41 @@ def segment_frame(folder, frame_name):
             'ssim': ssim_score
         })
 
+# weronika:
+#         mask_filename = f"m_{frame_name}_{folder}_{uuid.uuid4().hex[:6]}"
+#         mask_path = BASE_DIR / "app" / "static" / "masks" / mask_filename
+#         os.makedirs(mask_path.parent, exist_ok=True)
+
+#         mask_image = (1 - best_mask) * 255
+#         cv2.imwrite(str(mask_path), mask_image.astype(np.uint8))
+
+#         return jsonify({
+#             'success': True, 
+#             'mask_url': url_for('static', filename=f"masks/{mask_filename}")
+#             })
+
+#     except Exception as e:
+#         return jsonify({'success': False, 'error': str(e)})
+
+
+# TRACKING SPERM CELL
+@app.route('/track_and_segment_sperm', methods=['POST'])
+@login_required
+def track_and_segment_api():
+    try:
+        data = request.get_json()
+        folder = data['folder']
+        model_name = data['model']
+        points = data['points']  # [[x1,y1],[x2,y2]]
+
+        if not (folder and model_name and points):
+            return jsonify({'success': False, 'error': 'Missing parameters'})
+
+        result_urls = track_and_segment_sperm(folder, points, model_name)
+
+        return jsonify({'success': True, 'results': result_urls})
+      
+      #??????
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
