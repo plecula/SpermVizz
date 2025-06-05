@@ -116,25 +116,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-
-# Obliczanie IoU
-def calculate_iou(pred_mask, true_mask):
-    intersection = np.logical_and(pred_mask, true_mask)
-    union = np.logical_or(pred_mask, true_mask)
-    iou = np.sum(intersection) / np.sum(union)
-    return iou
-
-# Obliczanie DSC (Dice Similarity Coefficient)
-def calculate_dsc(pred_mask, true_mask):
-    intersection = np.logical_and(pred_mask, true_mask)
-    return 2 * np.sum(intersection) / (np.sum(pred_mask) + np.sum(true_mask))
-
-# Obliczanie SSIM (dla porównania jakości obrazu)
-def calculate_ssim(pred_image, true_image):
-    return ssim(pred_image, true_image, multichannel=True)
-
-
-
 # HOME
 @app.route('/')
 @app.route('/index.html')
@@ -287,8 +268,37 @@ def extract_frames_existing():
         return jsonify({'success': False, 'error': str(e)})
 
 
-# SEGMENTATION FOR FRAMES
 
+def calculate_iou(mask, ground_truth):
+    # Ensure both masks are binary (0 or 1)
+    mask = (mask > 0).astype(np.uint8)
+    ground_truth = (ground_truth > 0.5).astype(np.uint8)
+
+    intersection = np.sum(np.logical_and(mask, ground_truth))
+    union = np.sum(np.logical_or(mask, ground_truth))
+
+    iou = intersection / union if union != 0 else 0
+    return iou
+
+def calculate_dsc(mask, ground_truth):
+    # Ensure both masks are binary (0 or 1)
+    mask = (mask > 0.5).astype(np.uint8)
+    ground_truth = (ground_truth > 0.5).astype(np.uint8)
+
+    intersection = np.sum(np.logical_and(mask, ground_truth))
+    return 2 * intersection / (np.sum(mask) + np.sum(ground_truth)) if (np.sum(mask) + np.sum(ground_truth)) != 0 else 0
+
+def calculate_ssim(original_image, mask_image):
+    # Convert the original image to grayscale
+    original_gray = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+
+    # Ensure the mask is binary (0 or 1) and reshape if needed
+    mask_image = (mask_image > 0.5).astype(np.uint8)  # Convert mask to binary
+
+    # Calculate SSIM between the grayscale original image and the binary mask
+    return ssim(original_gray, mask_image)
+
+# SEGMENTATION FOR FRAMES
 @app.route('/segment_frame/<folder>/<frame_name>', methods=['GET'])
 @login_required
 def segment_frame(folder, frame_name):
@@ -333,23 +343,41 @@ def segment_frame(folder, frame_name):
         folder_suffix = folder.split('_')[-1]                   # np. "abc"
         mask_filename = f"{name_wo_ext}_{folder_suffix}.jpg"    # np. "frame_1_abc.png"
         mask_path = BASE_DIR / "app" / "static" / "masks" / mask_filename
-
-        os.makedirs(mask_path.parent, exist_ok=True)
-
-        mask_image = (1 - best_mask) * 255
-        cv2.imwrite(str(mask_path), mask_image.astype(np.uint8))
+               
 
         session['last_mask'] = mask_filename  # zapamiętaj maskę do eksportu
 
-        print("Maska zapisana jako:", mask_filename)
+
+        mask_image = (1 - best_mask) * 255
+        cv2.imwrite(str(mask_path), mask_image.astype(np.uint8))
+        
+        # Calculate Metrics
+        original_image = cv2.imread(str(frame_path))  # Read the original image
+        original_gray = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+        iou = calculate_iou(best_mask, original_gray)
+        dsc = calculate_dsc(best_mask, original_gray)
+        ssim_score = calculate_ssim(original_image, mask_image)
+
+
+        print(f"Original image shape: {original_image.shape}")
+        print(f"Best mask shape: {best_mask.shape}")
+
+        print(f"IoU: {iou}")
+        print(f"DSC: {dsc}")
+        print(f"SSIM: {ssim_score}")
 
         return jsonify({
-            'success': True, 
-            'mask_url': url_for('static', filename=f"masks/{mask_filename}")
-            })
+            'success': True,
+            'mask_url': url_for('static', filename=f"masks/{mask_filename}"),
+            'iou': iou,
+            'dsc': dsc,
+            'ssim': ssim_score
+        })
+
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
+        
 
 
 #EXPORT TO PNG, JSON    
@@ -416,62 +444,7 @@ def export_json():
     return send_from_directory(directory=download_path, path=json_filename, as_attachment=True)
 
 
-@app.route('/compare_segmentations')
-@login_required
-def compare_segmentations():
-    true_image_path = "path_to_true_image.jpg"  
-    pred_mask_path = "path_to_predicted_mask.png"  
 
-    true_image = cv2.imread(true_image_path)
-    pred_mask = cv2.imread(pred_mask_path, cv2.IMREAD_GRAYSCALE)
-
-    # Przekształcenie maski do postaci binarnej (0 lub 255)
-    _, pred_mask = cv2.threshold(pred_mask, 127, 255, cv2.THRESH_BINARY)
-
-    # Obliczanie metryk
-    iou = calculate_iou(pred_mask, true_image)
-    dsc = calculate_dsc(pred_mask, true_image)
-    ssim_value = calculate_ssim(pred_mask, true_image)
-
-    return jsonify({
-        'IoU': iou,
-        'DSC': dsc,
-        'SSIM': ssim_value
-    })
-
-@app.route('/export/comparison_image')
-@login_required
-def export_comparison_image():
-    # Wczytaj obraz i maskę
-    true_image = cv2.imread("path_to_true_image.jpg")
-    pred_mask = cv2.imread("path_to_predicted_mask.png", cv2.IMREAD_GRAYSCALE)
-
-    # Nałóż maskę na obraz
-    result_image = true_image.copy()
-    result_image[pred_mask == 255] = [0, 255, 0]  # Nałóż maskę na obraz w zielonym kolorze
-
-    # Zapisz wynikowy obraz
-    result_image_path = "static/comparison_result.jpg"
-    cv2.imwrite(result_image_path, result_image)
-
-    return send_from_directory(directory='static', path='comparison_result.jpg', as_attachment=True)
-
-
-
-@app.route('/export_segmented_image')
-@login_required
-def export_segmented_image():
-    mask_filename = request.args.get('filename')
-    if not mask_filename:
-        return "No filename provided", 400
-
-    masks_dir = os.path.join("static", "masks")
-    mask_path = os.path.join(masks_dir, mask_filename)
-
-    if not os.path.exists(mask_path):
-        return f"File does not exist: {mask_path}", 404
-
-    return send_from_directory(directory=masks_dir, path=mask_filename, as_attachment=True)
 
 # MY ACCOUNT - COMPARE MODELS
 @app.route('/compare.html', methods=['GET', 'POST'])
