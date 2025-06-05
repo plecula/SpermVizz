@@ -3,7 +3,11 @@ let framesList = [];
 let currentFrameIndex = 0;
 let selectedModel = null;
 let selectedModels = [];
+let selectedPoints = [];
+let trackMasks = [];
+
 const pageType = document.body.getAttribute('data-page-type');
+
 
 function cutCage() {
     const filename = document.getElementById('video-selector').value;
@@ -31,7 +35,7 @@ function cutCage() {
   document.querySelectorAll('.model-btn').forEach(button => {
     button.addEventListener('click', () => {
       
-      if (pageType === 'single'){
+      if (pageType === 'single' || pageType === 'track'){
         document.querySelectorAll('.model-btn').forEach(btn => btn.classList.remove('selected'));
 
         button.classList.add('selected');
@@ -55,6 +59,7 @@ function cutCage() {
           selectedModels.push(modelName);
         }
       }
+      
 
     })
   })
@@ -109,16 +114,6 @@ function cutCage() {
              };
              image1.src = maskUrl1;
     
-          //   // Wideo 1
-          //   const tile1 = document.querySelector('.video-right .video-wrapper:nth-child(1) .video-tile');
-          //   tile1.innerHTML = `<img src="${maskUrl1}" style="max-width: 100%; max-height: 100%;">`;
-    
-          //   // podpis
-          //   document.querySelector('.video-right .video-wrapper:nth-child(1) .video-caption').innerText = `Model 1: ${selectedModels[0]}`;
-          // } else {
-          //   alert('First model error: ' + result1.error);
-          // }
-
             captions[0].innerText = `Model 1: ${selectedModels[0]}`;
           } else {
             alert('First model error: ' + result1.error);
@@ -143,13 +138,7 @@ function cutCage() {
               ctx2.drawImage(image2, 0, 0, canvas2.width, canvas2.height);
             };
             image2.src = maskUrl2;
-    
-            // podpis
-        //     document.querySelector('.video-right .video-wrapper:nth-child(2) .video-caption').innerText = `Model 2: ${selectedModels[1]}`;
-        //   } else {
-        //     alert('Second model error: ' + result2.error);
-        //   }
-        // })
+
           captions[1].innerText = `Model 2: ${selectedModels[1]}`;
           } else {
             alert('Second model error: ' + result2.error);
@@ -200,7 +189,16 @@ function cutCage() {
           }
         });
     }
-    
+  
+    else if (pageType === 'track') {
+      if(!selectedModel) {
+        alert("At first choose segmentation model!");
+        return;
+      }
+      segmentWithPoints();
+
+      
+    }
   }
 
 
@@ -215,7 +213,7 @@ function cutCage() {
   }
  
 
-//skrypt do segmentacji
+//skrypt do klatkowania
 document.querySelectorAll('.video-file').forEach(link => {
   link.addEventListener('click', async function(e) {
     e.preventDefault();
@@ -261,8 +259,8 @@ document.querySelectorAll('.video-file').forEach(link => {
     // suwak
     slider.oninput = function() {
       const images = frameContainer.querySelectorAll('img');
-      images.forEach(img => img.style.display = 'none'); // Ukryj wszystkie
-      images[this.value].style.display = 'block';        // Pokaż tylko wybraną
+      images.forEach(img => img.style.display = 'none'); // ukrywa wszystkie
+      images[this.value].style.display = 'block';        // pokazuje tylko wybraną
       currentFrameIndex = parseInt(this.value);
 
       // update nazwy
@@ -276,3 +274,95 @@ document.querySelectorAll('.video-file').forEach(link => {
   });
 });
   
+
+// tracking
+
+document.getElementById("frame-container").addEventListener("click", function(e) {
+  const rect = this.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  if (selectedPoints.length < 2) {
+    selectedPoints.push([x, y]);
+
+    if (selectedPoints.length === 1) {
+      document.querySelector('p:nth-of-type(3)').innerText = `Head: (${x.toFixed(1)}, ${y.toFixed(1)})`;
+    } else {
+      document.querySelector('p:nth-of-type(4)').innerText = `Flagellum: (${x.toFixed(1)}, ${y.toFixed(1)})`;
+    }
+  }
+});
+
+function resetPoints() {
+  selectedPoints = [];
+  document.querySelector('p:nth-of-type(3)').innerText = "Head: ";
+  document.querySelector('p:nth-of-type(4)').innerText = "Flagellum: ";
+}
+
+
+function segmentWithPoints() {
+  if (selectedPoints.length < 2) {
+    alert("Click on head and flagellum first!");
+    return;
+  }
+
+  const frameNumber = currentFrameIndex;
+  const frameName = `frame_${frameNumber + 1}.jpg`;
+
+  fetch('/track_and_segment_sperm', {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      folder: currentFolder,
+      model: selectedModel,
+      points: selectedPoints
+    })
+  })
+  .then(response => response.json())
+  .then(result => {
+    if (result.success) {
+      trackMasks = result.results;
+  
+      // maska w canvas
+      const canvas3 = document.getElementById('mask-canvas');
+      const ctx = canvas3.getContext('2d');
+      const image = new Image();
+      image.onload = function() {
+        ctx.clearRect(0, 0, canvas3.width, canvas3.height);
+        ctx.drawImage(image, 0, 0, canvas3.width, canvas3.height);
+      };
+      image.src = trackMasks[0];
+  
+      // suwak pod maską
+      const trackSlider = document.createElement('input');
+      trackSlider.type = 'range';
+      trackSlider.id = 'track-slider';
+      trackSlider.min = 0;
+      trackSlider.max = trackMasks.length - 1;
+      trackSlider.value = 0;
+      trackSlider.style.width = '100%';
+  
+      // event do zmiany maski
+      trackSlider.oninput = function() {
+        const idx = parseInt(this.value);
+        const img = new Image();
+        img.onload = function() {
+          ctx.clearRect(0, 0, canvas3.width, canvas3.height);
+          ctx.drawImage(img, 0, 0, canvas3.width, canvas3.height);
+        };
+        img.src = trackMasks[idx];
+
+      };
+  
+      // suwak
+      const sliderDiv = document.getElementById('track-slider-container');
+      sliderDiv.innerHTML = ''; // czyści stare
+      sliderDiv.appendChild(trackSlider);
+
+    } else {
+      alert("Błąd segmentacji: " + result.error);
+    }
+  });
+  
+
+}
