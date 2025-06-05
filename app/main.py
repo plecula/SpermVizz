@@ -464,7 +464,6 @@ def export_segmented_image():
 
     return send_from_directory(directory=masks_dir, path=mask_filename, as_attachment=True)
 
-
 # MY ACCOUNT - COMPARE MODELS
 @app.route('/compare.html', methods=['GET', 'POST'])
 @login_required
